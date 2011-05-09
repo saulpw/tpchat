@@ -1,0 +1,30 @@
+#log {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    width:100%;
+    height:90%;
+    overflow: scroll;
+    overflow-x: hidden;
+    font-family:monospace;
+}
+
+body {
+    font-family: Courier;
+}
+
+#chatline {
+    width:85%;
+    float:left;
+}
+
+#error {
+    visibility: hidden;
+}
+
+#f div {
+    width: 100%;
+}
+
+#prompt {
+    float: left;
+}
