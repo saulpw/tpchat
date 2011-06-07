@@ -1,30 +1,64 @@
 #log {
+    height:90%;
+/*   
     white-space: pre-wrap;
     word-wrap: break-word;
-    width:100%;
-    height:90%;
+*/
     overflow: scroll;
     overflow-x: hidden;
+
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+body, button {
     font-family:monospace;
-}
-
-body {
-    font-family: Courier;
-}
-
-#chatline {
-    width:85%;
-    float:left;
 }
 
 #error {
     visibility: hidden;
 }
 
-#f div {
+.msgs {
+/*    display: table;
+    table-layout: fixed;
+    */
+    text-align: left;
+    width:100%;
+}
+
+#f {
+    height: 2em;
+}
+
+.msg {
+    display: table;
+    width:100%;
+}
+
+.msg div {
+    padding-right: .75em;
+}
+
+.timestamp .date {
+    width: 100%;
+    text-align: right;
+}
+
+.time, .src, .contents {
+    display: table-cell;
+}
+
+.time {
+    width: 5em;
+    text-align: center;
+    padding-right: 1em;
+}
+.src {
+    text-align: right;
+    padding-right: 1em;
+}
+.contents {
     width: 100%;
 }
 
-#prompt {
-    float: left;
-}
