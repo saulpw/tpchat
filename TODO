@@ -1,0 +1,20 @@
+
+features:
+  - login page a hidden piece of chat.html
+  1) session cookie lasts 12 hours
+  2) https
+  - cookie to remember name
+  - history: click on timestamp prepends previous day's log
+  - individual unstored chat: click to prepend '/msg nickname' in window
+    - delivered to active session only
+  - generic /command interface
+    - /clear
+    - /favicon
+    - /msg
+  - titlebar notification?
+  - /me from irc
+
+bugs:
+  - nick collision
+  - password
+  - investigate send timeout after error (contributing to lost messages?)

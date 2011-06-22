@@ -48,28 +48,41 @@ function send_accum_text()
    }
 }
 
+var reconnectTimeout = 100;
 
 function on_load()
 {
-    $("#chatline").focus()
-    $("#f").submit(say)
+    $("#chatline").focus();
+    $("#f").submit(say);
 
     $(document).ajaxError(function (event, xhr, opts, err) { 
        if (opts.url == lasturl) {
-           wait_for_chat(lastt);
+           if (reconnectTimeout > 10000) 
+               reconnectTimeout = 100;
+           else
+               reconnectTimeout *= 2;
+
+           set_wait_timer();
        } else {
            error("remote", opts.url + " failed: <br/>status: " + xhr.statusText + "<br/> response: " + xhr.responseText + "<br/>event: " + event + "<br/>err: " + err)
        }
-    })
+    });
 
-    recvtimeout = setTimeout('wait_for_chat(0)', 10)
+    set_wait_timer();
     sendtimer = setInterval('send_accum_text()', 200)
 }
 
-var lastt = 0;
+var lastt = -1;
 var lasturl = "";
 var tClientStarted = new Date();
 var localOffset = tClientStarted.getTimezoneOffset() * 60000;
+var recvtimeout = null;
+
+function set_wait_timer()
+{
+    clearTimeout(recvtimeout);
+    recvtimeout = setTimeout('wait_for_chat(lastt)', reconnectTimeout)
+}
 
 function getClockString(d)
 {

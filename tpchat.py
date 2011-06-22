@@ -16,7 +16,7 @@ import os
 import re
 
 ircd_passwd = "blah"
-ircd_servername = "ircweb-dev2.localhost"
+ircd_servername = "ircweb-dev.emups.com"
 ircd_serverdesc = "Textpunks dev server"
 
 divTimestamp = '<div class="msg timestamp">'
@@ -52,6 +52,7 @@ class User(object):
     implements(IUser)
     def __init__(self, session):
         self.nick = ""
+        self.channels = [ ]
 
 registerAdapter(User, Session, IUser)
 
@@ -120,15 +121,16 @@ class Channel(Resource):
         self.listeners = { }
 
     def render_GET(self, req):
-        if not req.user.nick:
-            req.setResponseCode(404)
-            return NOT_DONE_YET # XXX: leak. cause client js to error instead
 
         if "t" in req.args:
-            t = int(req.args["t"][0])
-        else:
-            t = self.contents.rfind(divTimestamp)
+            try:
+                t = int(req.args["t"][0])
+            except:
+                t = -1
 
+        if t < 0:
+            t = self.contents.rfind(divTimestamp)
+            
         if t >= len(self.contents):
             self.listeners[req.user.nick] = req
             return NOT_DONE_YET
@@ -162,6 +164,7 @@ class tpchat(Resource):
     def __init__(self):
         Resource.__init__(self)
         self.channels = { }
+        self.users = { }
         self.ircd = None
 
     def getChild(self, path, req):
@@ -173,35 +176,42 @@ class tpchat(Resource):
             channame = hostparts[-3]
 
         channel = self.getChannel("#" + channame)
-
+        
         req.user = IUser(req.getSession())
+        print time.ctime(), req, path
 
-        print req, channel, path, req.user.nick
-
+        # static file should come before logged-in check
         if path in staticFiles:
             return staticFiles[path]
 
+        # login must come before logged-in check
         if path == "login":
             if "nick" in req.args and isValidNick(req.args["nick"][0]):
                 n = req.args["nick"][0]
 
                 req.user.nick = n
-                return Redirect("/")
+                req.user.channels.append(channel)
+
+                print "*** %s joined %s" % (req.user.nick, channel)
+
+                return Redirect("/") # LoggedIn()
 
             return LoginPage
+
+        # logged-in check
+        if not req.user.nick:
+            return LoginPage
+
+        # these must come after logged-in check
+        if not path:
+            return FileTemplate("chat.html", { 'nickname': req.user.nick })
 
         if path == "log":
             return channel
 
-        if not req.user.nick:
-            return Redirect("/login")
-
         if path == "logout":
             req.getSession().expire()
             return LoginPage
-
-        if not path:
-            return FileTemplate("chat.html", { 'nickname': req.user.nick })
 
         return Resource.getChild(self, path, req)
     
