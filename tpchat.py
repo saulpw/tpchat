@@ -350,15 +350,15 @@ class tpircd(twisted.protocols.basic.LineReceiver):
         return False
 
     def on_PRIVMSG(self, src, rest):
-        channel, _, rest = rest.partition(" ")
+        channame, _, rest = rest.partition(" ")
         if src in self.names:
             src = self.names[src]
 
-        print rest, rest.encode("hex")
+        channel = root.getChannel(channame)
         if rest[0:8] == ":\001ACTION":
-            root.getChannel(channel).logwrite("*&nbsp" + src, rest[9:-1], fromIRC=True)
+            channel.logwrite("*&nbsp" + src, rest[9:-1], fromIRC=True)
         else:
-            root.getChannel(channel).logwrite("[%s]" %  src, rest[1:], fromIRC=True)
+            channel.logwrite("[%s]" %  src, rest[1:], fromIRC=True)
 
         return False
 
