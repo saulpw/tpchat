@@ -356,7 +356,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
 
         channel = root.getChannel(channame)
         if rest[0:8] == ":\001ACTION":
-            channel.logwrite("*&nbsp" + src, rest[9:-1], fromIRC=True)
+            channel.logwrite("*&nbsp" + src, rest[9:-2], fromIRC=True)
         else:
             channel.logwrite("[%s]" %  src, rest[1:], fromIRC=True)
 

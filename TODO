@@ -1,6 +1,5 @@
 
 features:
-  1- session cookie lasts 12 hours
   - https
   - individual unstored chat: click to prepend '/msg nickname' in window
     - delivered to active session only
@@ -8,14 +7,22 @@ features:
     - /clear
     - /favicon
     - /msg
-  - titlebar notification?
   - provide GMT date/time text from server by default if js isn't working
+     - rejigger where the time_t is stored
+     - timezone for default server string?
   - set cookie for initial setting of nickname, sessionlife
 
 bugs:
-  - nick collision
-  - investigate send timeout after error (contributing to lost messages?)
-  - scroll to bottom when new text not added
+  - what to do with simultaneous user logins?  logout old one
+    - js needs to detect logged out and redirect to login, not go crazy
+    - just go back to login always?
+    - maybe related to caching issue?
   - firefox caching issue (login -> chatlog)
-  - disconnect on irc server unrecoverable
-  - login page: select name/form on load
+  - scroll to bottom when new text not added sometimes
+  - disconnect from irc server unrecoverable
+  - login page: 
+    - name/form focus on load
+    - top/left margins
+
+  - test: session cookie lasts 12 hours?
+  - investigate send timeout after error (contributing to lost messages?)
