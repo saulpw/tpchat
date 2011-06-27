@@ -9,7 +9,6 @@ features:
     - /favicon
     - /msg
   - titlebar notification?
-  - /me from irc
   - provide GMT date/time text from server by default if js isn't working
   - set cookie for initial setting of nickname, sessionlife
 
@@ -18,3 +17,5 @@ bugs:
   - investigate send timeout after error (contributing to lost messages?)
   - scroll to bottom when new text not added
   - firefox caching issue (login -> chatlog)
+  - disconnect on irc server unrecoverable
+  - login page: select name/form on load

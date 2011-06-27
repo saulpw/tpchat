@@ -30,7 +30,7 @@ def divTimestamp(fileoffset):
 fmtdivChatline = '''
 <div class="msg">
 <div class="time">%s</div>
-<div class="src"> [%s]</div>
+<div class="src"> %s</div>
 <div class="contents"> %s</div>
 </div>''' 
 
@@ -156,7 +156,7 @@ class Channel(Resource):
             req.setResponseCode(404)
             return "not logged in"
 
-        self.logwrite(req.user.nick, req.args["chatline"][0])
+        self.logwrite("[%s]" % req.user.nick, req.args["chatline"][0])
         return "OK"
 
 
@@ -354,8 +354,9 @@ class tpircd(twisted.protocols.basic.LineReceiver):
         if src in self.names:
             src = self.names[src]
 
-        if rest[0:7] == ":\001ACTION":
-            root.getChannel(channel).logwrite(src, rest[7:], fromIRC=True)
+        print rest, rest.encode("hex")
+        if rest[0:8] == ":\001ACTION":
+            root.getChannel(channel).logwrite("*&nbsp" + src, rest[9:-1], fromIRC=True)
         else:
             root.getChannel(channel).logwrite("[%s]" %  src, rest[1:], fromIRC=True)
 
