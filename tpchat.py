@@ -19,8 +19,13 @@ ircd_passwd = "blah"
 ircd_servername = "ircweb-dev.emups.com"
 ircd_serverdesc = "Textpunks dev server"
 
-divTimestamp = '<div class="msg timestamp">'
-fmtdivTimestamp = divTimestamp + '<div class="date">%s</div></div>'
+divTimestampStart = '<div class="msg timestamp">' # to detect daily divisions
+def divTimestamp(fileoffset):
+    if fileoffset == 0:
+        return divTimestampStart + '<div class="date">%s</div></div>' % getDateString()
+    else:
+        return divTimestampStart + '''<a href="javascript:get_backlog(%s)">
+    <div class="date">%s</div></a></div>''' % (fileoffset, getDateString())
 
 fmtdivChatline = '''
 <div class="msg">
@@ -65,10 +70,12 @@ def isValidNick(nick):
 
 class Channel(Resource):
     isLeaf = True
-    def __init__(self, name):
+    def __init__(self, name, key=None):
         self.name = name
         self.logfn = self.name + ".log"
         self.listeners = { }
+        self.key = key
+        self.members = { }
         self.lastWriteTime = 0
         try:
             self.contents = file(self.logfn).read()
@@ -76,6 +83,8 @@ class Channel(Resource):
             self.contents = ""
 
         root.ircd.join(name)
+        if key is not None:
+            root.ircd.setkey(name, key) 
 
     def __str__(self):
         return "[channel %s]" % self.name
@@ -101,7 +110,7 @@ class Channel(Resource):
         nowymd = time.gmtime()[0:2]
 
         if lastymd != nowymd:
-            data += fmtdivTimestamp % getDateString()
+            data += divTimestamp(len(self.contents))
 
         data += fmtdivChatline % (getClockString(), src or self.name, xmlmsg)
 
@@ -113,31 +122,33 @@ class Channel(Resource):
         if not fromIRC:
             root.ircd.sendToChannel(self.name, src, msg)
 
+        smsg = '<span t="%s" id="log">%s</span>' % (len(self.contents), data)
         for nick, req in self.listeners.iteritems():
-            smsg = '<span t="%s" id="log">%s</span>' % (len(self.contents), data)
             req.write(smsg)
             req.finish()
 
         self.listeners = { }
 
     def render_GET(self, req):
+        t = 0
 
-        if "t" in req.args:
-            try:
-                t = int(req.args["t"][0])
-            except:
-                t = -1
+        try:
+            t = int(req.args["t"][0])
+        except:
+            t = -len(self.contents)
 
         if t < 0:
-            t = self.contents.rfind(divTimestamp)
-            
-        if t >= len(self.contents):
+            t = self.contents[:-t].rfind(divTimestampStart)
+        else:
+            t = self.contents[t:].find(divTimestampStart)
+
+        if t >= len(self.contents) or t == -1:
             self.listeners[req.user.nick] = req
             return NOT_DONE_YET
 
         history = self.contents[t:]
         history.replace("\n", "<br/>")
-        msg = '<span t="%s" id="log">%s</span>' % (len(self.contents)+1, history)
+        msg = '<span t="%s" nextt="%s" id="log">%s</span>' % (t, len(self.contents)+1, history)
         return msg
 
     def render_POST(self, req):
@@ -147,6 +158,14 @@ class Channel(Resource):
 
         self.logwrite(req.user.nick, req.args["chatline"][0])
         return "OK"
+
+
+class LoginFile(File):
+    def __init__(self, msg=""):
+        File.__init__(self, "login.html")
+   
+    def render_POST(self, req):
+        return self.render_GET(req)
 
 class DumpInfo(Resource):
     isLeaf = True
@@ -164,7 +183,6 @@ class tpchat(Resource):
     def __init__(self):
         Resource.__init__(self)
         self.channels = { }
-        self.users = { }
         self.ircd = None
 
     def getChild(self, path, req):
@@ -175,10 +193,9 @@ class tpchat(Resource):
         else: 
             channame = hostparts[-3]
 
-        channel = self.getChannel("#" + channame)
-        
         req.user = IUser(req.getSession())
-        print time.ctime(), req, path
+
+#        print req, req.args
 
         # static file should come before logged-in check
         if path in staticFiles:
@@ -186,40 +203,63 @@ class tpchat(Resource):
 
         # login must come before logged-in check
         if path == "login":
+            if "password" in req.args:
+                channel = self.getChannel("#" + channame, key=req.args["password"][0])
+
+                if channel is None:
+                    print "incorrect login: %s" % req.args
+                    return LoginPage # channel key incorrect
+            else:
+                channel = self.getChannel("#" + channame, key="")
+            
             if "nick" in req.args and isValidNick(req.args["nick"][0]):
                 n = req.args["nick"][0]
+                if n not in self.ircd.names: # if not already exists on irc
+                    req.user.nick = n
+                    req.user.channels.append(channel)
 
-                req.user.nick = n
-                req.user.channels.append(channel)
+                    print time.ctime(), "*** %s joined %s" % (n, channel)
 
-                print "*** %s joined %s" % (req.user.nick, channel)
-
-                return Redirect("/") # LoggedIn()
+                    return Redirect("/")
 
             return LoginPage
+
+        channel = self.getChannel("#" + channame)
 
         # logged-in check
         if not req.user.nick:
+            print "not logged in", req
             return LoginPage
 
         # these must come after logged-in check
-        if not path:
-            return FileTemplate("chat.html", { 'nickname': req.user.nick })
-
         if path == "log":
+            print "get channel data", req, req.args
             return channel
 
         if path == "logout":
+            print "logout", req
             req.getSession().expire()
             return LoginPage
 
+        if not path:
+            print "no path", req
+            return FileTemplate("chat.html", { 'nickname': req.user.nick })
+
+        print "else", req
         return Resource.getChild(self, path, req)
     
-    def getChannel(self, channame):
+    def getChannel(self, channame, key=None):
         if channame not in self.channels:
-            self.channels[channame] = Channel(channame)
+            self.channels[channame] = Channel(channame, key=key)
 
-        return self.channels[channame]
+        channel = self.channels[channame]
+
+        if key is not None: # user login/join attempt
+            if channel.key is not None:
+                if channel.key != key:
+                    return None
+
+        return channel
 
 class tpircd(twisted.protocols.basic.LineReceiver):
     def __init__(self):
@@ -280,6 +320,9 @@ class tpircd(twisted.protocols.basic.LineReceiver):
     def join(self, cname):
         self.send(":%s NJOIN %s :%s" % (self.sid, cname, self.loguid))
 
+    def setkey(self, cname, key):
+        self.send(":%s MODE %s :+k %s" % (self.sid, cname, key))
+
     def getuid(self, name, newuid=None):
         if not name:
             return self.loguid
@@ -311,9 +354,28 @@ class tpircd(twisted.protocols.basic.LineReceiver):
         if src in self.names:
             src = self.names[src]
 
-        root.getChannel(channel).logwrite(src, rest[1:], fromIRC=True)
+        if rest[0:7] == ":\001ACTION":
+            root.getChannel(channel).logwrite(src, rest[7:], fromIRC=True)
+        else:
+            root.getChannel(channel).logwrite("[%s]" %  src, rest[1:], fromIRC=True)
 
         return False
+
+    def on_MODE(self, src, rest):
+        target, modes = rest.split(" ", 3)
+        if " " in modes:
+            modes, args = modes.split(" ")
+
+        if target in root.channels:
+            channel = root.getChannel(target)
+            for m in modes:
+                if m == "k":
+                    channel.key = args.pop(0)
+                    print "%s key='%s'" % (channel, channel.key)
+                elif m == "l":
+                    limit = args.pop(0)
+        return True
+            
 
     def on_UNICK(self, src, rest):
         nick, uid, rest = rest.split(" ", 2)
@@ -334,6 +396,9 @@ class tpircd(twisted.protocols.basic.LineReceiver):
     def on_NJOIN(self, src, rest):
         cname, rest = rest.split(" ", 1)
         channel = root.getChannel(cname)
+#        for uid in src[1:].split(" "):
+#            nick = self.names[uid]
+#            channel.members[nick] = { }
 
         return True
 
@@ -347,7 +412,7 @@ class FileTemplate(Resource):
     def render_GET(self, req):
         return self.contents
 
-LoginPage = File("login.html")
+LoginPage = LoginFile()
 
 staticFiles = {
     'robots.txt': File("robots.txt"),

@@ -1,10 +1,7 @@
 
 features:
-  - login page a hidden piece of chat.html
-  1) session cookie lasts 12 hours
-  2) https
-  - cookie to remember name
-  - history: click on timestamp prepends previous day's log
+  1- session cookie lasts 12 hours
+  - https
   - individual unstored chat: click to prepend '/msg nickname' in window
     - delivered to active session only
   - generic /command interface
@@ -13,8 +10,11 @@ features:
     - /msg
   - titlebar notification?
   - /me from irc
+  - provide GMT date/time text from server by default if js isn't working
+  - set cookie for initial setting of nickname, sessionlife
 
 bugs:
   - nick collision
-  - password
   - investigate send timeout after error (contributing to lost messages?)
+  - scroll to bottom when new text not added
+  - firefox caching issue (login -> chatlog)
