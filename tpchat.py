@@ -22,7 +22,7 @@ ircd_serverdesc = "Textpunks dev server"
 divTimestampStart = '<div class="msg timestamp">' # to detect daily divisions
 def divTimestamp(fileoffset):
     if fileoffset == 0:
-        return divTimestampStart + '<div class="date" timet="%s">%s</div></div>' % (getDateString(), time.strftime("%x"))
+        return divTimestampStart + '<div class="date" timet="%s">%s</div></div>' % (getDateString(), time.strftime("%Y-%b-%d"))
     else:
         ahref = '<a class="date" href="javascript:get_backlog(%s)"><div class="date" timet="%s">%s&#x2B06;</div></a>' % (fileoffset, getDateString(), time.strftime("%x"))
         return divTimestampStart + ahref + '</div>'
@@ -36,7 +36,7 @@ fmtdivChatline = '''
 
 def divChatline(src, contents):
     t = getClockString()
-    return fmtdivChatline % (getClockString(), time.strftime("%X"), src, contents)
+    return fmtdivChatline % (getClockString(), time.strftime("%H:%M"), src, contents)
 
 regexUrl = re.compile(r"(http://\S+)", re.IGNORECASE | re.LOCALE)
 
@@ -152,6 +152,7 @@ class Channel(Resource):
 
         history = self.contents[t:]
         history.replace("\n", "<br/>")
+#        msg = '<head><link type="text/css" rel="stylesheet" href="style.css"/></head>'
         msg = '<span t="%s" nextt="%s" id="log">%s</span>' % (t, len(self.contents)+1, history)
         return msg
 
@@ -237,7 +238,7 @@ class tpchat(Resource):
 
         # these must come after logged-in check
         if path == "log":
-            print "get channel data", req, req.args
+#            print "get channel data", req, req.args
             return channel
 
         if path == "logout":
