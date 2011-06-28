@@ -106,15 +106,15 @@ function post_new_chat(x, replace)
     var newchat = $(x);
 
     $(".time", newchat).each(function (i, v) {
-        var d = new Date($(v).text() * 1000 + localOffset);
+        var d = new Date($(v).attr("timet") * 1000 + localOffset);
         var t = getClockString(d);
         $(v).text(t);
     });
 
     $(".date", newchat).each(function (i, v) {
-        var d = new Date($(v).text() * 1000 + localOffset);
-        var t = getDateString(d);
-        $(v).text(t);
+        var d = new Date($(v).attr("timet") * 1000 + localOffset);
+        var t = getDateString(d); // + " &#x2B06;";
+        $(v).html(t);
     });
 
     if (replace) {
@@ -154,7 +154,7 @@ function wait_for_chat(t)
     $.get(lasturl).success(function(x) {
         post_new_chat(x, false);
         reconnectTimeout = 100;
-        var t1 = $(x).attr("nextt");
+        var t1 = parseInt($(x).attr("nextt"));
         wait_for_chat(t1);
 
         return true;

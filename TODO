@@ -20,9 +20,11 @@ bugs:
   - firefox caching issue (login -> chatlog)
   - scroll to bottom when new text not added sometimes
   - disconnect from irc server unrecoverable
-  - login page: 
-    - name/form focus on load
-    - top/left margins
+  - login page: name/form focus on load
+style:
+  - top/left margins on login page
+  - bottom bar fixed height
 
   - test: session cookie lasts 12 hours?
   - investigate send timeout after error (contributing to lost messages?)
+  - server exception when old client reconnects

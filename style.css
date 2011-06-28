@@ -40,9 +40,12 @@ body, button {
     padding-right: .75em;
 }
 
-.timestamp .date {
+.date {
     width: 100%;
     text-align: right;
+}
+.date {
+    text-decoration: none;   
 }
 
 .time, .src, .contents {

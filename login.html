@@ -3,6 +3,12 @@
 <meta http-equiv="Cache-control" content="no-cache"/>
 <title>Emups Login</title>
 <link type="text/css" rel="stylesheet" href="style.css">
+<script type="text/javascript">
+   function formfocus() {
+      document.getElementById('nick').focus();
+   }
+   window.onload = formfocus;
+</script>
 </head>
 <body>
 <form id="f" action="/login" method="POST">

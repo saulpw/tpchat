@@ -22,17 +22,21 @@ ircd_serverdesc = "Textpunks dev server"
 divTimestampStart = '<div class="msg timestamp">' # to detect daily divisions
 def divTimestamp(fileoffset):
     if fileoffset == 0:
-        return divTimestampStart + '<div class="date">%s</div></div>' % getDateString()
+        return divTimestampStart + '<div class="date" timet="%s">%s</div></div>' % (getDateString(), time.strftime("%x"))
     else:
-        return divTimestampStart + '''<a href="javascript:get_backlog(%s)">
-    <div class="date">%s</div></a></div>''' % (fileoffset, getDateString())
+        ahref = '<a class="date" href="javascript:get_backlog(%s)"><div class="date" timet="%s">%s&#x2B06;</div></a>' % (fileoffset, getDateString(), time.strftime("%x"))
+        return divTimestampStart + ahref + '</div>'
 
 fmtdivChatline = '''
 <div class="msg">
-<div class="time">%s</div>
+<div class="time" timet="%s">%s</div>
 <div class="src"> %s</div>
 <div class="contents"> %s</div>
 </div>''' 
+
+def divChatline(src, contents):
+    t = getClockString()
+    return fmtdivChatline % (getClockString(), time.strftime("%X"), src, contents)
 
 regexUrl = re.compile(r"(http://\S+)", re.IGNORECASE | re.LOCALE)
 
@@ -112,7 +116,7 @@ class Channel(Resource):
         if lastymd != nowymd:
             data += divTimestamp(len(self.contents))
 
-        data += fmtdivChatline % (getClockString(), src or self.name, xmlmsg)
+        data += divChatline(src or self.name, xmlmsg)
 
         self.contents += data
 
@@ -122,7 +126,7 @@ class Channel(Resource):
         if not fromIRC:
             root.ircd.sendToChannel(self.name, src, msg)
 
-        smsg = '<span t="%s" id="log">%s</span>' % (len(self.contents), data)
+        smsg = '<span nextt="%s" id="log">%s</span>' % (len(self.contents), data)
         for nick, req in self.listeners.iteritems():
             req.write(smsg)
             req.finish()
@@ -356,7 +360,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
 
         channel = root.getChannel(channame)
         if rest[0:8] == ":\001ACTION":
-            channel.logwrite("*&nbsp" + src, rest[9:-2], fromIRC=True)
+            channel.logwrite("*&nbsp" + src, rest[9:-1], fromIRC=True)
         else:
             channel.logwrite("[%s]" %  src, rest[1:], fromIRC=True)
 
