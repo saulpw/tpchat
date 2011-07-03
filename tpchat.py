@@ -74,13 +74,13 @@ class Channel(Resource):
     isLeaf = True
     def __init__(self, name, key=None):
         self.name = name
-        self.logfn = self.name + ".log"
+        self.logfn = os.path.join(tpconfig.log_path, self.name + ".log")
         self.listeners = { }
         self.key = key
         self.members = { }
         self.lastWriteTime = 0
         try:
-            self.contents = file(os.path.join(tpconfig.log_path, self.logfn)).read()
+            self.contents = file(self.logfn).read()
         except IOError:
             self.contents = ""
 
