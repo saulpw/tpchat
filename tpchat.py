@@ -11,20 +11,18 @@ from twisted.web.util import Redirect
 import twisted.protocols.basic
 from zope.interface import Interface, Attribute, implements
 
+import tpconfig
+
 import time
 import os
 import re
-
-ircd_passwd = "blah"
-ircd_servername = "ircweb-dev.emups.com"
-ircd_serverdesc = "Textpunks dev server"
 
 divTimestampStart = '<div class="msg timestamp">' # to detect daily divisions
 def divTimestamp(fileoffset):
     if fileoffset == 0:
         return divTimestampStart + '<div class="date" timet="%s">%s</div></div>' % (getDateString(), time.strftime("%Y-%b-%d"))
     else:
-        ahref = '<a class="date" href="javascript:get_backlog(%s)"><div class="date" timet="%s">%s&#x2B06;</div></a>' % (fileoffset, getDateString(), time.strftime("%x"))
+        ahref = '<a href="javascript:get_backlog(%s)"><div class="date" timet="%s">%s&#x2B06;</div></a>' % (fileoffset, getDateString(), time.strftime("%x"))
         return divTimestampStart + ahref + '</div>'
 
 fmtdivChatline = '''
@@ -247,7 +245,7 @@ class tpchat(Resource):
             return LoginPage
 
         if not path:
-            print "no path", req
+#            print "no path", req
             return FileTemplate("chat.html", { 'nickname': req.user.nick })
 
         print "else", req
@@ -305,8 +303,8 @@ class tpircd(twisted.protocols.basic.LineReceiver):
             print "UNHANDLED %s :%s %s" % (cmd, src, line)
 
     def connectionMade(self):
-        self.send("PASS %s 02110000 |" % ircd_passwd)
-        self.send("SERVER %s 1 %s :%s" % (ircd_servername, self.sid, ircd_serverdesc))
+        self.send("PASS %s 02110000 |" % tpconfig.ircd_passwd)
+        self.send("SERVER %s 1 %s :%s" % (tpconfig.ircd_servername, self.sid, tpconfig.ircd_serverdesc))
         self.loguid = self.getuid("_", 0xFFFFF)
 
         root.ircd = self
@@ -377,7 +375,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
             for m in modes:
                 if m == "k":
                     channel.key = args.pop(0)
-                    print "%s key='%s'" % (channel, channel.key)
+#                    print "%s key='%s'" % (channel, channel.key)
                 elif m == "l":
                     limit = args.pop(0)
         return True
@@ -432,7 +430,6 @@ root = tpchat()
 
 factory = Site(root)
 
-# https://<channel>.ideatrial.com -> if not nick, redirect to /login.html
-reactor.connectTCP("localhost", 6667, ircdFactory())
+reactor.connectTCP(tpconfig.real_ircd_server, tpconfig.real_ircd_port, ircdFactory())
 
 reactor.run()
