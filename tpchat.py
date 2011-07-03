@@ -269,7 +269,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
         self.uids = { }
         self.names = { }
         self.nextuid = 0xAAAAA
-        self.sid = "100B"
+        self.sid = tpconfig.ircd_sid
 
     def debug(self):
         ret = "sid=%s\n" % self.sid
@@ -309,7 +309,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
 
         root.ircd = self
 
-        reactor.listenTCP(4444, factory)
+        reactor.listenTCP(tpconfig.tpchat_port, factory)
 
     def send(self, line):
 #        print ">", line
@@ -416,20 +416,25 @@ class FileTemplate(Resource):
     def render_GET(self, req):
         return self.contents
 
-LoginPage = LoginFile()
-
-staticFiles = {
-    'robots.txt': File("robots.txt"),
-    'favicon.ico': File("favicon.ico"),
-    'style.css': File("style.css"),
-    'tpchat.js': File("tpchat.js"),
+staticFiles = { 
     'debug': DumpInfo()
 }
 
-root = tpchat()
+LoginPage = LoginFile()
 
-factory = Site(root)
+def main():
+    global root, factory
 
-reactor.connectTCP(tpconfig.real_ircd_server, tpconfig.real_ircd_port, ircdFactory())
+    for fn in [ "robots.txt favicon.ico style.css tpchat.js".split() ]:
+        staticFiles[fn] = File(os.path.join(tpconfig.htdocs_path, fn)
 
-reactor.run()
+    root = tpchat()
+
+    factory = Site(root)
+
+    reactor.connectTCP(tpconfig.real_ircd_server, tpconfig.real_ircd_port, ircdFactory())
+
+    reactor.run()
+
+if __name__ == "__main__":
+    main()
