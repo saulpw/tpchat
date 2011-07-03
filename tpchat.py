@@ -425,8 +425,8 @@ LoginPage = LoginFile()
 def main():
     global root, factory
 
-    for fn in [ "robots.txt favicon.ico style.css tpchat.js".split() ]:
-        staticFiles[fn] = File(os.path.join(tpconfig.htdocs_path, fn)
+    for fn in "robots.txt favicon.ico style.css tpchat.js".split():
+        staticFiles[fn] = File(os.path.join(tpconfig.htdocs_path, fn))
 
     root = tpchat()
 
