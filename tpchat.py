@@ -80,7 +80,7 @@ class Channel(Resource):
         self.members = { }
         self.lastWriteTime = 0
         try:
-            self.contents = file(self.logfn).read()
+            self.contents = file(os.path.join(tpconfig.log_path, self.logfn)).read()
         except IOError:
             self.contents = ""
 
@@ -411,7 +411,7 @@ class ircdFactory(protocol.ReconnectingClientFactory):
 
 class FileTemplate(Resource):
     def __init__(self, fn, d):
-        self.contents = file(fn, "r").read() % d
+        self.contents = file(os.path.join(tpconfig.htdocs_path, fn), "r").read() % d
 
     def render_GET(self, req):
         return self.contents
