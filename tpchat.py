@@ -305,7 +305,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
     def connectionMade(self):
         self.send("PASS %s 02110000 |" % tpconfig.ircd_passwd)
         self.send("SERVER %s 1 %s :%s" % (tpconfig.ircd_servername, self.sid, tpconfig.ircd_serverdesc))
-        self.loguid = self.getuid("_", 0xFFFFF)
+        self.loguid = self.getuid(tpconfig.ircd_nick, 0xFFFFF)
 
         root.ircd = self
 
