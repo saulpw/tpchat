@@ -52,16 +52,8 @@ var reconnectTimeout = 100;
 
 function wait_error(event, xhr, opts, err)
 {
-//   if (opts.url == lasturl) {
-       if (reconnectTimeout > 10000) // check every 10 seconds if can't connect
-           reconnectTimeout = 10000;
-       else
-           reconnectTimeout *= 2;
-
-       set_wait_timer();
-//   } else {
-//       error("remote", opts.url + " failed: <br/>status: " + xhr.statusText + "<br/> response: " + xhr.responseText + "<br/>event: " + event + "<br/>err: " + err)
-//   }
+   error("remote", opts.url + " failed: <br/>status: " + xhr.statusText + "<br/> response: " + xhr.responseText + "<br/>event: " + event + "<br/>err: " + err)
+   $(".msgs").addClass("disconnected");
 }
 
 function on_load()
@@ -75,7 +67,7 @@ function on_load()
     sendtimer = setInterval('send_accum_text()', 200)
 }
 
-var lastt = undefined;
+var lastt = -1;
 var lasturl = "";
 var tClientStarted = new Date();
 var localOffset = tClientStarted.getTimezoneOffset() * 60000;
@@ -136,30 +128,25 @@ function get_backlog(ttt)
     $.get("/log?t=-" + ttt).success(function(x) {
           post_new_chat(x, true);
           return true;
-    }).error(function (x) {
-        error("remote", "failed to get since time " + ttt)
     });
 }
 
 function wait_for_chat(t)
 {
-    lasturl = "/log";
-    if (isFinite(t)) {
-        lastt = t;
-    }
-    if (isFinite(lastt)) {
-        lasturl += "?t=" + lastt;
-    }
+    lastt = t;
+    lasturl = "/log?t=" + lastt;
 
     $.get(lasturl).success(function(x) {
         post_new_chat(x, false);
-        reconnectTimeout = 100;
         var t1 = parseInt($(x).attr("nextt"));
+        if (!isFinite(t1)) {
+            lastt = -1;
+            error("remote", "invalid nextt");
+            return;
+        }
         wait_for_chat(t1);
 
         return true;
-    }).error(function (x) {
-        error("remote", lasturl + " failed")
     });
 }
 

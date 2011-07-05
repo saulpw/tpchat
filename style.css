@@ -15,10 +15,6 @@ body, button {
     font-family:monospace;
 }
 
-#error {
-    visibility: hidden;
-}
-
 .msgs {
 /*    display: table;
     table-layout: fixed;
@@ -38,6 +34,28 @@ body, button {
 
 .msg div {
     padding-right: .75em;
+}
+
+.disconnected #sendbar {
+    display: none;
+}
+
+.disconnected #error {
+    display: block;
+}
+
+#error {
+    height: 2em;
+    display: none;
+}
+
+#error .errmsg {
+    font-size: 2em;
+    font-family: serif;
+}
+
+.disconnected #log {
+    background-color: khaki;
 }
 
 .date {
