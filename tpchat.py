@@ -134,7 +134,8 @@ class Channel(Resource):
 
         if t == -1:
             t = -len(self.contents)
-        elif t < 0:
+
+        if t < 0:
             t = self.contents[:-t].rfind(divTimestampStart)
         else:
             t = self.contents[t:].find(divTimestampStart)
