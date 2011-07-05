@@ -52,8 +52,14 @@ var reconnectTimeout = 100;
 
 function wait_error(event, xhr, opts, err)
 {
-   error("remote", opts.url + " failed: <br/>status: " + xhr.statusText + "<br/> response: " + xhr.responseText + "<br/>event: " + event + "<br/>err: " + err)
-   $(".msgs").addClass("disconnected");
+    msg = opts.url + " failed: ";
+    msg += "<br/>status: " + xhr.statusText;
+    msg += "<br/>response: " + xhr.responseText;
+    msg += "<br/>event: " + event;
+    msg += "<br/>error: " + err;
+
+    error("remote", msg);
+    $(".msgs").addClass("disconnected");
 }
 
 function on_load()
