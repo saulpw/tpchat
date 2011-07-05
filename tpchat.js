@@ -76,7 +76,6 @@ function on_load()
 var lastt = -1;
 var lasturl = "";
 var tClientStarted = new Date();
-var localOffset = tClientStarted.getTimezoneOffset() * 60000;
 var recvtimeout = undefined;
 
 function set_wait_timer()
@@ -104,13 +103,15 @@ function post_new_chat(x, replace)
     var newchat = $(x);
 
     $(".time", newchat).each(function (i, v) {
-        var d = new Date($(v).attr("timet") * 1000 + localOffset);
+        var timet = $(v).attr("timet");
+        var d = new Date(timet * 1000);
         var t = getClockString(d);
         $(v).text(t);
     });
 
     $(".date", newchat).each(function (i, v) {
-        var d = new Date($(v).attr("timet") * 1000 + localOffset);
+        var timet = $(v).attr("timet");
+        var d = new Date(timet * 1000);
         var t = getDateString(d); // + " &#x2B06;";
         $(v).html(t);
     });

@@ -39,14 +39,7 @@ def divChatline(src, contents):
 regexUrl = re.compile(r"(http://\S+)", re.IGNORECASE | re.LOCALE)
 
 def getClockString():
-    t = time.localtime()
-
-    if t.tm_isdst == 0:
-        tz = time.timezone
-    else:
-        tz = time.altzone
-
-    return int(time.time() - tz)
+    return int(time.time())
 
 def getDateString():
     return getClockString()
