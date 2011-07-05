@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from twisted.internet import reactor, protocol, defer
+from twisted.internet import reactor, protocol, defer, ssl
 from twisted.python import log
 from twisted.python.components import registerAdapter
 from twisted.web.server import Site, NOT_DONE_YET, Session
@@ -305,6 +305,12 @@ class tpircd(twisted.protocols.basic.LineReceiver):
         root.ircd = self
 
         reactor.listenTCP(tpconfig.tpchat_port, factory)
+
+        if tpconfig.secure:
+            sslContext = ssl.DefaultOpenSSLContextFactory(
+                                    tpconfig.secure_key,
+                                    tpconfig.secure_cacert)
+            reactor.listenSSL(tpconfig.secure_port, factory, contextFactory=sslContext)
 
     def send(self, line):
 #        print ">", line
