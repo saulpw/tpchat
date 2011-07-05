@@ -119,8 +119,12 @@ class Channel(Resource):
 
         smsg = '<span nextt="%s" id="log">%s</span>' % (len(self.contents), data)
         for nick, req in self.listeners.iteritems():
-            req.write(smsg)
-            req.finish()
+            try:
+                req.write(smsg)
+                req.finish()
+            except:
+                print "*** use request.notifyFinish()"
+                pass
 
         self.listeners = { }
 
