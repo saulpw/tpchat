@@ -16,9 +16,6 @@ body, button {
 }
 
 .msgs {
-/*    display: table;
-    table-layout: fixed;
-    */
     text-align: left;
     width:100%;
 }
@@ -29,10 +26,11 @@ body, button {
 
 .msg {
     display: table;
+    border-spacing: 0px;
     width:100%;
 }
 
-.msg div {
+.msg td, .msg div {
     padding-right: .75em;
 }
 
@@ -68,6 +66,7 @@ body, button {
 
 .time, .src, .contents {
     display: table-cell;
+    vertical-align: top;
 }
 
 .time {

@@ -17,20 +17,21 @@ import time
 import os
 import re
 
-divTimestampStart = '<div class="msg timestamp">' # to detect daily divisions
+divTimestampStart = '<table class="msg timestamp"><tr>' # to detect daily divisions
 def divTimestamp(fileoffset):
     if fileoffset == 0:
-        return divTimestampStart + '<div class="date" timet="%s">%s</div></div>' % (getDateString(), time.strftime("%Y-%b-%d"))
+        return divTimestampStart + '<td class="date" timet="%s">%s</td></tr></table>' % (getDateString(), time.strftime("%Y-%b-%d"))
     else:
-        ahref = '<a href="javascript:get_backlog(%s)"><div class="date" timet="%s">%s&#x2B06;</div></a>' % (fileoffset, getDateString(), time.strftime("%x"))
-        return divTimestampStart + ahref + '</div>'
+        ahref = '<a href="javascript:get_backlog(%s)"><td class="date" timet="%s">%s&#x2B06;</td></a>' % (fileoffset, getDateString(), time.strftime("%x"))
+        return divTimestampStart + ahref + '</tr></table>'
 
 fmtdivChatline = '''
-<div class="msg">
-<div class="time" timet="%s">%s</div>
-<div class="src"> %s</div>
-<div class="contents"> %s</div>
-</div>''' 
+<table class="msg">
+<tr>
+<td class="time" timet="%s">%s</td>
+<td class="src"> %s</td>
+<td class="contents"> %s</td>
+</tr></table>''' 
 
 def divChatline(src, contents):
     t = getClockString()
@@ -129,20 +130,25 @@ class Channel(Resource):
         self.listeners = { }
 
     def render_GET(self, req):
-        t = -1
+        givent = -1
 
         try:
-            t = int(req.args["t"][0])
+            givent = int(req.args["t"][0])
         except:
             pass
 
-        if t == -1:
+        if givent == -1:
             t = -len(self.contents)
+        else:
+            t = givent
 
         if t < 0:
             t = self.contents[:-t].rfind(divTimestampStart)
         else:
             t = self.contents[t:].find(divTimestampStart)
+
+        if givent == -1:
+            t = 0
 
         if t >= len(self.contents) or t == -1:
             self.listeners[req.user.nick] = req
