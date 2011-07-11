@@ -31,7 +31,7 @@ fmtdivChatline = '''
 <td class="time" timet="%s">%s</td>
 <td class="src"> %s</td>
 <td class="contents"> %s</td>
-</tr></table>''' 
+</tr></table>''' # spaces included for reasonable cutnpaste
 
 def divChatline(src, contents):
     t = getClockString()
@@ -437,7 +437,7 @@ LoginPage = LoginFile()
 def main():
     global root, factory
 
-    for fn in "robots.txt favicon.ico style.css tpchat.js".split():
+    for fn in "robots.txt favicon.ico style.css tpchat.js tpstyle.css".split():
         staticFiles[fn] = File(os.path.join(tpconfig.htdocs_path, fn))
 
     root = tpchat()

@@ -1,0 +1,45 @@
+#log {
+    height:90%;
+    overflow: scroll;
+    overflow-x: hidden;
+}
+
+body, button {
+    font-family:monospace;
+    padding-top: .5em;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.msg {
+    width:100%;
+}
+
+td {
+    padding-right: .75em;
+}
+
+.contents {
+    width: 100%;
+}
+
+.time {
+    width: 5em;
+    text-align: center;
+}
+
+.timestamp {
+    width: 100%;
+    text-align: right;
+    text-decoration: none;   
+}
+
+#f {
+    height: 2em;
+}
+
+#error { height: 2em; display: none; }
+.disconnected #sendbar { display: none; } 
+.disconnected #error { display: block; }
+.disconnected #log { background-color: khaki; }
+

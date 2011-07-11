@@ -1,8 +1,14 @@
-<html><head>
+<!doctype xhtml>
+<!--[if lt IE 7 ]> <html class="ie6" lang="en" xmlns="http://www.w3.org/1999/xhtml"> <![endif]-->
+<!--[if IE 7 ]> <html class="ie7" lang="en" xmlns="http://www.w3.org/1999/xhtml"> <![endif]-->
+<!--[if IE 8 ]> <html class="ie8" lang="en" xmlns="http://www.w3.org/1999/xhtml"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html lang="en" xmlns="http://www.w3.org/1999/xhtml"> <!--<![endif]-->
+<head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta http-equiv="Cache-control" content="no-cache"/>
 <title>Login</title>
 <link type="text/css" rel="stylesheet" href="style.css">
+<link type="text/css" rel="stylesheet" href="tpstyle.css">
 <script type="text/javascript">
    function formfocus() {
       document.getElementById('nick').focus();
@@ -16,12 +22,12 @@
 <input id="nick" name="nick" type="text" />
 <br/>[password]&nbsp;
 <input id="password" name="password" type="password" />
-<br/>
+<!--br/>
 Logout automatically <select name="sessionlife">
 <option value="close">on window close</option>
 <option value="day">after 12 hours</option>
 <option value="forever">never</option>
-</select>
+</select-->
 <br/>
 <button id="login" name="login" type="submit">Login</button>
 </div>

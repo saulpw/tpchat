@@ -52,11 +52,7 @@ var reconnectTimeout = 100;
 
 function wait_error(event, xhr, opts, err)
 {
-    msg = opts.url + " failed: ";
-    msg += "<br/>status: " + xhr.statusText;
-    msg += "<br/>response: " + xhr.responseText;
-    msg += "<br/>event: " + event;
-    msg += "<br/>error: " + err;
+    msg = opts.url + ": " + xhr.statusText + " " + event;
 
     error("remote", msg);
     $(".msgs").addClass("disconnected");
