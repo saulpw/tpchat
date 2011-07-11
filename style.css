@@ -63,8 +63,8 @@ input, select { vertical-align: middle; }
  * Font normalization inspired by YUI Library's fonts.css: developer.yahoo.com/yui/
  */
 
-body { font:13px/1.231 sans-serif; *font-size:small; } /* Hack retained to preserve specificity */
-select, input, textarea, button { font:99% sans-serif; }
+body { font:13px/1.231 monospace; *font-size:small; } /* Hack retained to preserve specificity */
+select, input, textarea, button { font:99% monospace; }
 
 /* Normalize monospace sizing:
    en.wikipedia.org/wiki/MediaWiki_talk:Common.css/Archive_11#Teletype_style_fix_for_Chrome */
@@ -124,9 +124,6 @@ input:invalid, textarea:invalid {
 .no-boxshadow input:invalid, .no-boxshadow textarea:invalid { background-color: #f0dddd; }
 
 
-/* j.mp/webkit-tap-highlight-color */
-a:link { -webkit-tap-highlight-color: #FF5E99; }
-
 /* Make buttons play nice in IE:
    www.viget.com/inspire/styling-the-button-element-in-internet-explorer/ */
 button {  width: auto; overflow: visible; }
@@ -143,7 +140,7 @@ body, select, input, textarea {
   /* #444 looks better than black: twitter.com/H_FJ/statuses/11800719859 */
   color: #000;
   /* Set your base font here, to apply evenly */
-  /* font-family: Georgia, serif;  */
+  font-family: monospace;
 }
 
 /* Headers (h1, h2, etc) have no default font-size or margin; define those yourself */

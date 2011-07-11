@@ -28,10 +28,10 @@ td {
     text-align: center;
 }
 
-.timestamp {
+.timestamp td {
+    padding-top: .5em;
     width: 100%;
     text-align: right;
-    text-decoration: none;   
 }
 
 #f {

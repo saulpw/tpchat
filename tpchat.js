@@ -105,7 +105,7 @@ function post_new_chat(x, replace)
         $(v).text(t);
     });
 
-    $(".date", newchat).each(function (i, v) {
+    $(".stardate", newchat).each(function (i, v) {
         var timet = $(v).attr("timet");
         var d = new Date(timet * 1000);
         var t = getDateString(d); // + " &#x2B06;";

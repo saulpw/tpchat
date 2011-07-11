@@ -20,9 +20,11 @@ import re
 divTimestampStart = '<table class="msg timestamp"><tr>' # to detect daily divisions
 def divTimestamp(fileoffset):
     if fileoffset == 0:
-        return divTimestampStart + '<td class="date" timet="%s">%s</td></tr></table>' % (getDateString(), time.strftime("%Y-%b-%d"))
+        return divTimestampStart + '<td class="date"><span timet="%s" class="stardate">%s</span></td></tr></table>' % (getDateString(), time.strftime("%Y-%b-%d"))
     else:
-        ahref = '<a href="javascript:get_backlog(%s)"><td class="date" timet="%s">%s&#x2B06;</td></a>' % (fileoffset, getDateString(), time.strftime("%x"))
+        ahref = '<td class="date">'
+        ahref += '<a class="stardate" timet="%s" href="javascript:get_backlog(%s)">%s</a>' % (getDateString(), fileoffset, time.strftime("%x"))
+        ahref += '</td>' 
         return divTimestampStart + ahref + '</tr></table>'
 
 fmtdivChatline = '''
@@ -102,8 +104,8 @@ class Channel(Resource):
         lastWriteTime = self.lastWriteTime
         self.lastWriteTime = time.time()
 
-        lastymd = time.gmtime(lastWriteTime)[0:2]
-        nowymd = time.gmtime()[0:2]
+        lastymd = time.gmtime(lastWriteTime)[0:3]
+        nowymd = time.gmtime()[0:3]
 
         if lastymd != nowymd:
             data += divTimestamp(len(self.contents))
@@ -124,7 +126,7 @@ class Channel(Resource):
                 req.write(smsg)
                 req.finish()
             except:
-                print "*** use request.notifyFinish()"
+                print "*** use request.notifyFinish()" # XXX
                 pass
 
         self.listeners = { }
@@ -147,7 +149,7 @@ class Channel(Resource):
         else:
             t = self.contents[t:].find(divTimestampStart)
 
-        if givent == -1:
+        if givent == -1 and t == -1:
             t = 0
 
         if t >= len(self.contents) or t == -1:
