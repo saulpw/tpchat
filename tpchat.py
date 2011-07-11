@@ -27,13 +27,8 @@ def divTimestamp(fileoffset):
         ahref += '</td>' 
         return divTimestampStart + ahref + '</tr></table>'
 
-fmtdivChatline = '''
-<table class="msg">
-<tr>
-<td class="time" timet="%s">%s</td>
-<td class="src"> %s</td>
-<td class="contents"> %s</td>
-</tr></table>''' # spaces included for reasonable cutnpaste
+fmtdivChatline = '''<table class="msg"><tr><td class="time" timet="%s">%s</td> <td class="src"> %s</td><td class="contents"> %s</td></tr></table>
+''' # spaces included for reasonable cutnpaste, newline for chatlog
 
 def divChatline(src, contents):
     t = getClockString()
