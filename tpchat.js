@@ -5,6 +5,13 @@ var ready_to_send = true;
 function error(t, e)
 {
    $("#error #" + t).html(e)
+
+    if (nRetries > 0) {
+        set_wait_timer();
+        nRetries -= 1;
+    } else {
+        $(".msgs").addClass("disconnected");
+    }
 }
 
 function say(e)
@@ -22,7 +29,7 @@ function send_accum_text()
 {
    if (send_text != "") {
        if (!ready_to_send) {
-          error("local", "not ready to send '<pre>" + send_text + "'</pre>!  ");
+          error("local", "not ready to send '" + send_text + "'!  ");
           return;
        }
        ready_to_send = false;
@@ -37,25 +44,30 @@ function send_accum_text()
                      $("#chatline").val(send_text + "\n" + $("#chatline").val());
                      send_text = "";
                   } 
+
+                  clearInterval(sendtimer);
                   ready_to_send = true; 
+                  sendtimer = setInterval('send_accum_text()', 200);
                 },
                 error: function (xhr, status, err) {
                     error("remote", status);
                     clearInterval(sendtimer);
-                    sendtimer = setInterval('send_accum_text()', 2000);
+                    ready_to_send = true;
+
+                    sendtimer = setInterval('send_accum_text()', 1000);
                 }
               })
    }
 }
 
-var reconnectTimeout = 100;
+var reconnectTimeout = 1000;
+var nRetries = 10;
 
 function wait_error(event, xhr, opts, err)
 {
     msg = opts.url + ": " + xhr.statusText + " " + event;
-
     error("remote", msg);
-    $(".msgs").addClass("disconnected");
+
 }
 
 function on_load()

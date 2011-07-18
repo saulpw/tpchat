@@ -23,6 +23,7 @@ bugs:
     - js needs to detect logged out and redirect to login, not go crazy
     - just go back to login always?
     - maybe related to caching issue?
+    - 'XXX'
 
   - scroll to bottom when new text not added sometimes
   - disconnect from irc server unrecoverable
