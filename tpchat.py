@@ -13,6 +13,7 @@ from zope.interface import Interface, Attribute, implements
 
 import tpconfig
 
+import sys
 import time
 import os
 import re
@@ -116,15 +117,19 @@ class Channel(Resource):
             root.ircd.sendToChannel(self.name, src, msg)
 
         smsg = '<span nextt="%s" id="log">%s</span>' % (len(self.contents), data)
-        for nick, req in self.listeners.iteritems():
-            try:
-                req.write(smsg)
-                req.finish()
-            except:
-                print "*** use request.notifyFinish()" # XXX
-                pass
+        for req in self.listeners.values():
+            req.write(smsg)
+            req.finish()
 
         self.listeners = { }
+
+    def _reqFinished(self, failure, req):
+        try:
+            del self.listeners[req.user.nick]
+            if failure:
+                return failure
+        except:
+            print "*** %s: %s %s" % (sys.exc_info()[1], failure, req)
 
     def render_GET(self, req):
         givent = -1
@@ -149,6 +154,8 @@ class Channel(Resource):
 
         if t >= len(self.contents) or t == -1:
             self.listeners[req.user.nick] = req
+            req.notifyFinish().addCallback(self._reqFinished, req)
+            req.notifyFinish().addErrback(self._reqFinished, req)
             return NOT_DONE_YET
 
         history = self.contents[t:]
@@ -191,7 +198,7 @@ class tpchat(Resource):
         self.channels = { }
         self.ircd = None
 
-    def getChild(self, path, req):
+    def getChannelNameFromReq(self, req):
         hostparts = req.getHeader("host").split(".")
 
         if len(hostparts) < 3:
@@ -199,8 +206,13 @@ class tpchat(Resource):
         else: 
             channame = hostparts[-3]
 
+        return "#" + channame
+
+
+    def getChild(self, path, req):
         req.user = IUser(req.getSession())
 
+        channame = self.getChannelNameFromReq(req)
 #        print req, req.args
 
         # static file should come before logged-in check
@@ -210,13 +222,13 @@ class tpchat(Resource):
         # login must come before logged-in check
         if path == "login":
             if "password" in req.args:
-                channel = self.getChannel("#" + channame, key=req.args["password"][0])
+                channel = self.getChannel(channame, key=req.args["password"][0])
 
                 if channel is None:
                     print "incorrect login: %s" % req.args
                     return LoginPage # channel key incorrect
             else:
-                channel = self.getChannel("#" + channame, key="")
+                channel = self.getChannel(channame, key="")
             
             if "nick" in req.args and isValidNick(req.args["nick"][0]):
                 n = req.args["nick"][0]
@@ -230,7 +242,7 @@ class tpchat(Resource):
 
             return LoginPage
 
-        channel = self.getChannel("#" + channame)
+        channel = self.getChannel(channame)
 
         # logged-in check
         if not req.user.nick:

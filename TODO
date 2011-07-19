@@ -1,12 +1,12 @@
 goals:
-    - pragmatic
-    - simplicity
-    - under-designed (safe-for-work)
-    - unicode-friendly
-    - familiar
-    - archival: tone is more of a shared diary than a chatroom
-    - reliable
-    - allows for deep quality contact
+  * pragmatic
+  * simplicity
+  * under-designed (safe-for-work)
+  * unicode-friendly
+  * familiar
+  * archival: tone is more of a shared diary than a chatroom
+  * reliable
+  * allows for deep quality contact
 
 
 features:
@@ -19,21 +19,11 @@ features:
   - set cookie for initial setting of nickname, sessionlife
 
 bugs:
-  ! what to do with simultaneous user logins?  logout old one
-    - js needs to detect logged out and redirect to login, not go crazy
-    - just go back to login always?
-    - maybe related to caching issue?
-    - 'XXX'
-
   - scroll to bottom when new text not added sometimes
   - disconnect from irc server unrecoverable
-
-  ? firefox caching issue (login -> chatlog)
+  - session cookie should last 12 hours
 
 style:
   - top/left margins on login page
   - bottom bar fixed height
 
-  - test: session cookie lasts 12 hours?
-  - investigate send timeout after error (contributing to lost messages?)
-  - server exception when old client reconnects

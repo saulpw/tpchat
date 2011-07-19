@@ -7,7 +7,7 @@ function error(t, e)
    $("#error #" + t).html(e)
 
     if (nRetries > 0) {
-        set_wait_timer();
+        set_wait_timer(reconnectTimeout);
         nRetries -= 1;
     } else {
         $(".msgs").addClass("disconnected");
@@ -24,7 +24,6 @@ function say(e)
    }
    return false;
 }
-
 function send_accum_text()
 {
    if (send_text != "") {
@@ -77,7 +76,7 @@ function on_load()
 
     $(document).ajaxError(wait_error);
 
-    set_wait_timer();
+    set_wait_timer(1); // first time do it right away
     sendtimer = setInterval('send_accum_text()', 200)
 }
 
@@ -85,11 +84,12 @@ var lastt = -1;
 var lasturl = "";
 var tClientStarted = new Date();
 var recvtimeout = undefined;
+var cacheblocker = tClientStarted.getTime();
 
-function set_wait_timer()
+function set_wait_timer(timeout)
 {
     clearTimeout(recvtimeout);
-    recvtimeout = setTimeout('wait_for_chat(lastt)', reconnectTimeout)
+    recvtimeout = setTimeout('wait_for_chat(lastt)', timeout)
 }
 
 function getClockString(d)
@@ -149,7 +149,8 @@ function get_backlog(ttt)
 function wait_for_chat(t)
 {
     lastt = t;
-    lasturl = "/log?t=" + lastt;
+    lasturl = "/log?t=" + lastt + "&cb=" + cacheblocker;
+    cacheblocker += 1;
 
     $.get(lasturl).success(function(x) {
         post_new_chat(x, false);
