@@ -12,16 +12,33 @@
 <script type="text/javascript">
    function formfocus() {
       document.getElementById('nick').focus();
+      document.loginform.nick.value = getCookie("nickname");
    }
+
+   function getCookie(name) {
+      var nameEQ = name + "=";
+      var ca = document.cookie.split(';');
+      for(var i=0;i < ca.length;i++) {
+          var c = ca[i];
+          while (c.charAt(0)==' ') c = c.substring(1,c.length);
+          if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+      }
+      return null;
+   }
+
    window.onload = formfocus;
+
+
 </script>
 </head>
 <body>
-<form id="f" action="/login" method="POST">
+<form id="f" name="loginform" action="/login" method="POST">
 <div id="prompt">[nickname]&nbsp;
 <input id="nick" name="nick" type="text" />
 <br/>[password]&nbsp;
 <input id="password" name="password" type="password" />
+<br/>[channel]&nbsp;&nbsp;
+<input id="channel" name="channel" type="text" %(channelattr)s value="%(channel)s"/>
 <!--br/>
 Logout automatically <select name="sessionlife">
 <option value="close">on window close</option>

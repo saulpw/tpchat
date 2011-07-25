@@ -18,6 +18,8 @@ import time
 import os
 import re
 
+verbose = False
+
 divTimestampStart = '<table class="msg timestamp"><tr>' # to detect daily divisions
 def divTimestamp(fileoffset):
     if fileoffset == 0:
@@ -28,12 +30,16 @@ def divTimestamp(fileoffset):
         ahref += '</td>' 
         return divTimestampStart + ahref + '</tr></table>'
 
-fmtdivChatline = '''<table class="msg"><tr><td class="time" timet="%s">%s</td> <td class="src"> %s</td><td class="contents"> %s</td></tr></table>
+fmtdivChatline = '''<table class="msg"><tr><td class="time" timet="%(time)s">%(hrmin)s</td> <td class="src"> %(src)s</td><td class="contents"> %(contents)s</td></tr></table>
 ''' # spaces included for reasonable cutnpaste, newline for chatlog
 
-def divChatline(src, contents):
-    t = getClockString()
-    return fmtdivChatline % (getClockString(), time.strftime("%H:%M"), src, contents)
+def divChatline(**extra):
+    if "time" not in extra:
+        extra["time"] = getClockString()
+
+    extra["hrmin"] = time.strftime("%H:%M", time.localtime(int(extra["time"])))
+
+    return fmtdivChatline % extra
 
 regexUrl = re.compile(r"(http://\S+)", re.IGNORECASE | re.LOCALE)
 
@@ -86,15 +92,7 @@ class Channel(Resource):
     def debug(self):
         return "%s: %s listeners, %s bytes of content\n" % (self.name, len(self.listeners), len(self.contents))
 
-    def logwrite(self, src, msg, fromIRC=False):
-        xmlmsg = str(msg)
-        xmlmsg.replace("\n", "<br/>")
-        matchobj = regexUrl.search(xmlmsg)
-        if matchobj is not None:
-            url = matchobj.groups()[0]
-            htmlLink = '<a href="%s" target="_blank">%s</a>' % (url, url)
-            xmlmsg = xmlmsg[0:matchobj.start()] + htmlLink + xmlmsg[matchobj.end():]
-
+    def logwrite(self, msg, fromIRC=False):
         data = ""
 
         lastWriteTime = self.lastWriteTime
@@ -106,20 +104,15 @@ class Channel(Resource):
         if lastymd != nowymd:
             data += divTimestamp(len(self.contents))
 
-        data += divChatline(src or self.name, xmlmsg)
+        data += msg
 
         self.contents += data
 
         with file(self.logfn, "a") as fp:
             fp.write(data)
 
-        if not fromIRC:
-            root.ircd.sendToChannel(self.name, src, msg)
-
-        smsg = '<span nextt="%s" id="log">%s</span>' % (len(self.contents), data)
         for req in self.listeners.values():
-            req.write(smsg)
-            req.finish()
+            self.privateChatReply(req, data)
 
         self.listeners = { }
 
@@ -160,16 +153,88 @@ class Channel(Resource):
 
         history = self.contents[t:]
         history.replace("\n", "<br/>")
+
 #        msg = '<head><link type="text/css" rel="stylesheet" href="style.css"/></head>'
-        msg = '<span t="%s" nextt="%s" id="log">%s</span>' % (t, len(self.contents)+1, history)
-        return msg
+        self.privateChatReply(req, history, timestamp=t)
+   
+    def lpReply(self, target, text):
+        self.privateChatReply(self.listeners[target], text)
+
+    def privateChatReply(self, req, data, timestamp=None):
+        tstxt = ""
+        if timestamp:
+            tstxt = 't="%s"' % timestamp
+        smsg = '<span %s nextt="%s" id="log">%s</span>' % (tstxt, len(self.contents)+1, data)
+        req.write(smsg)
+        req.finish()
+        
+    def cmd_ME(self, src, rest):
+        self.privmsg(src, "\001ACTION %s\001" % rest)
+
+    def cmd_MSG(self, src, rest):
+        target, msg = rest.split(" ", 1)
+        if target in self.listeners:
+            self.lpReply(target, "*%s* %s" % (src, msg))
+            return "-> *%s* %s" % (target, msg)
+        elif target in root.ircd.uids:
+            root.ircd.PRIVMSG(target, src, msg)
+            return "-> *%s* %s" % (target, msg)
+        else:
+            return "*** %s is not logged in (%s)" % (" ".join(self.listeners.keys()), target)
+
+    def cmd_HELP(self, src, rest):
+        return "No help available."
 
     def render_POST(self, req):
         if not req.user.nick:
             req.setResponseCode(404)
             return "not logged in"
 
-        self.logwrite("[%s]" % req.user.nick, req.args["chatline"][0])
+        text = req.args["chatline"][0]
+        if text[0] == '/':
+            cmd, rest = text.split(" ", 1)
+            cmd = cmd.upper()
+
+            handler = "cmd_" + cmd[1:]
+            if handler in Channel.__dict__:
+                r = False
+                try:
+                    r = Channel.__dict__[handler](self, req.user.nick, rest.strip())
+                except:
+                    r = sys.exc_info()[1]
+
+                if r:
+                    self.lpReply(req.user.nick, r)
+            else:
+                self.privmsg(req.user.nick, text)
+        else:
+            self.privmsg(req.user.nick, text)
+
+        return "OK"
+
+    def privmsg(self, src, msg, fromIRC=False, action=False):
+        if not fromIRC:
+            root.ircd.PRIVMSG("#" + self.name, "[%s]" % src, msg)
+
+        if msg[0:7] == "\001ACTION":
+            action = True
+            msg = msg[8:-1]
+
+        xmlmsg = str(msg)
+        xmlmsg.replace("\n", "<br/>")
+        matchobj = regexUrl.search(xmlmsg)
+        if matchobj is not None:
+            url = matchobj.groups()[0]
+            htmlLink = '<a href="%s" target="_blank">%s</a>' % (url, url)
+            xmlmsg = xmlmsg[0:matchobj.start()] + htmlLink + xmlmsg[matchobj.end():]
+
+        if action:
+            data = divChatline(src="*&nbsp" + src, contents=xmlmsg)
+            self.logwrite(data, fromIRC)
+        else:
+            data = divChatline(src="[%s]" % src, contents=xmlmsg)
+            self.logwrite(data, fromIRC)
+
         return "OK"
 
 
@@ -206,7 +271,7 @@ class tpchat(Resource):
         else: 
             channame = hostparts[-3]
 
-        return "#" + channame
+        return channame
 
 
     def getChild(self, path, req):
@@ -218,6 +283,11 @@ class tpchat(Resource):
         # static file should come before logged-in check
         if path in staticFiles:
             return staticFiles[path]
+
+        if channame:
+            LoginPage = FileTemplate("login.html", channel=channame, channelattr='style=""')
+        else:
+            LoginPage = FileTemplate("login.html", channel="", channelattr="")
 
         # login must come before logged-in check
         if path == "login":
@@ -261,7 +331,7 @@ class tpchat(Resource):
 
         if not path:
 #            print "no path", req
-            return FileTemplate("chat.html", { 'nickname': req.user.nick })
+            return FileTemplate("chat.html", nickname=req.user.nick)
 
         print "else", req
         return Resource.getChild(self, path, req)
@@ -312,7 +382,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
             try:
                 r = tpircd.__dict__[handler](self, src, rest)
             finally:
-                if r:
+                if r or verbose:
                     print "<", line
         else:
             print "UNHANDLED %s :%s %s" % (cmd, src, line)
@@ -333,19 +403,20 @@ class tpircd(twisted.protocols.basic.LineReceiver):
             reactor.listenSSL(tpconfig.secure_port, factory, contextFactory=sslContext)
 
     def send(self, line):
-#        print ">", line
+        if verbose:
+            print ">", line
         self.transport.write(line + "\n")
 
-    def sendToChannel(self, chan, src, msg):
+    def PRIVMSG(self, dest, src, msg):
         msg = str(msg)
         for i in xrange(0, len(msg), 450):
-            self.send(":%s PRIVMSG %s :%s" % (self.getuid(src), chan, msg[i:i+450]))
+            self.send(":%s PRIVMSG %s :%s" % (self.getuid(src), dest, msg[i:i+450]))
 
     def join(self, cname):
-        self.send(":%s NJOIN %s :%s" % (self.sid, cname, self.loguid))
+        self.send(":%s NJOIN %s :%s" % (self.sid, '#' + cname, self.loguid))
 
     def setkey(self, cname, key):
-        self.send(":%s MODE %s :+k %s" % (self.sid, cname, key))
+        self.send(":%s MODE %s :+k %s" % (self.sid, '#' + cname, key))
 
     def getuid(self, name, newuid=None):
         if not name:
@@ -374,15 +445,15 @@ class tpircd(twisted.protocols.basic.LineReceiver):
         return False
 
     def on_PRIVMSG(self, src, rest):
-        channame, _, rest = rest.partition(" ")
+        target, _, rest = rest.partition(" ")
         if src in self.names:
             src = self.names[src]
 
-        channel = root.getChannel(channame)
-        if rest[0:8] == ":\001ACTION":
-            channel.logwrite("*&nbsp" + src, rest[9:-1], fromIRC=True)
+        if target[0] == "#":
+            channel = root.getChannel(target[1:])
+            channel.privmsg(src, rest[1:], fromIRC=True)
         else:
-            channel.logwrite("[%s]" %  src, rest[1:], fromIRC=True)
+            pass # XXX: deliver to web user
 
         return False
 
@@ -392,7 +463,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
             modes, args = modes.split(" ")
 
         if target in root.channels:
-            channel = root.getChannel(target)
+            channel = root.getChannel(target[1:])
             for m in modes:
                 if m == "k":
                     channel.key = args.pop(0)
@@ -412,15 +483,16 @@ class tpircd(twisted.protocols.basic.LineReceiver):
     def on_SQUIT(self, src, rest):
         disconnsid, rest = rest.split(" ", 1)
         if disconnsid == self.sid:
-            log("Booted; reconnecting")
-            self.transport.finish() # XXX
-            self.transport.connect() # XXX
+            print "Booted; reconnecting"
+            self.transport.loseConnection()
+            connect_ircd()
 
         return True
 
     def on_NJOIN(self, src, rest):
         cname, rest = rest.split(" ", 1)
-        channel = root.getChannel(cname)
+        channel = root.getChannel(cname[1:])
+
 #        for uid in src[1:].split(" "):
 #            nick = self.names[uid]
 #            channel.members[nick] = { }
@@ -431,8 +503,8 @@ class ircdFactory(protocol.ReconnectingClientFactory):
     protocol = tpircd
 
 class FileTemplate(Resource):
-    def __init__(self, fn, d):
-        self.contents = file(os.path.join(tpconfig.htdocs_path, fn), "r").read() % d
+    def __init__(self, fn, **kwargs):
+        self.contents = file(os.path.join(tpconfig.htdocs_path, fn), "r").read() % kwargs
 
     def render_GET(self, req):
         return self.contents
@@ -441,7 +513,8 @@ staticFiles = {
     'debug': DumpInfo()
 }
 
-LoginPage = LoginFile()
+def connect_ircd():
+    reactor.connectTCP(tpconfig.real_ircd_server, tpconfig.real_ircd_port, ircdFactory())
 
 def main():
     global root, factory
@@ -453,9 +526,10 @@ def main():
 
     factory = Site(root)
 
-    reactor.connectTCP(tpconfig.real_ircd_server, tpconfig.real_ircd_port, ircdFactory())
+    connect_ircd()
 
     reactor.run()
 
 if __name__ == "__main__":
     main()
+

@@ -78,6 +78,9 @@ function on_load()
 
     set_wait_timer(1); // first time do it right away
     sendtimer = setInterval('send_accum_text()', 200)
+
+    var nickname = $("#b").text();
+    setCookie("nickname", nickname, 365*24);
 }
 
 var lastt = -1;
@@ -165,6 +168,18 @@ function wait_for_chat(t)
         return true;
     });
 }
+
+// ----  helpers
+function setCookie(name,value,hours) {
+    if (hours) {
+        var date = new Date();
+        date.setTime(date.getTime()+(hours*60*60*1000));
+        var expires = "; expires="+date.toGMTString();
+    }
+    else var expires = "";
+    document.cookie = name+"="+value+expires+"; path=/";
+}
+
 
 $(document).ready(on_load);
 

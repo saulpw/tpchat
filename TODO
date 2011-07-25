@@ -12,18 +12,18 @@ goals:
 features:
   - individual unstored chat: click to prepend '/msg nickname' in window
     - delivered to active session only
-  - generic /command interface
+  - /command
+    - /msg
     - /clear
     - /favicon
-    - /msg
-  - set cookie for initial setting of nickname, sessionlife
+  - openid login (google; facebook; yahoo)
 
 bugs:
   - scroll to bottom when new text not added sometimes
-  - disconnect from irc server unrecoverable
+  - SQUIT/disconnect from irc server unrecoverable
   - session cookie should last 12 hours
 
 style:
   - top/left margins on login page
   - bottom bar fixed height
-
+  - on disconnect, background gets progressively darker
