@@ -111,18 +111,15 @@ class Channel(Resource):
         with file(self.logfn, "a") as fp:
             fp.write(data)
 
-        for req in self.listeners.values():
-            self.privateChatReply(req, data)
+        for member in self.listeners.keys():
+            self.lpReply(member, data)
 
         self.listeners = { }
 
     def _reqFinished(self, failure, req):
-        try:
-            del self.listeners[req.user.nick]
-            if failure:
-                return failure
-        except:
-            print "*** %s: %s %s" % (sys.exc_info()[1], failure, req)
+        if failure:
+            print failure
+            return failure
 
     def render_GET(self, req):
         givent = -1
@@ -155,18 +152,19 @@ class Channel(Resource):
         history.replace("\n", "<br/>")
 
 #        msg = '<head><link type="text/css" rel="stylesheet" href="style.css"/></head>'
-        self.privateChatReply(req, history, timestamp=t)
+        req.write(self.privateChatReply(history, timestamp=t))
+        # render calls .finish() automatically
    
     def lpReply(self, target, text):
-        self.privateChatReply(self.listeners[target], text)
+        self.listeners[target].write(self.privateChatReply(text))
+        self.listeners[target].finish()
+        del self.listeners[target]
 
-    def privateChatReply(self, req, data, timestamp=None):
+    def privateChatReply(self, data, timestamp=None):
         tstxt = ""
         if timestamp:
             tstxt = 't="%s"' % timestamp
-        smsg = '<span %s nextt="%s" id="log">%s</span>' % (tstxt, len(self.contents)+1, data)
-        req.write(smsg)
-        req.finish()
+        return '<span %s nextt="%s" id="log">%s</span>' % (tstxt, len(self.contents)+1, data)
         
     def cmd_ME(self, src, rest):
         self.privmsg(src, "\001ACTION %s\001" % rest)
