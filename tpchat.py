@@ -157,8 +157,12 @@ class Channel(Resource):
    
     def lpReply(self, target, text):
         self.listeners[target].write(self.privateChatReply(text))
-        self.listeners[target].finish()
-        del self.listeners[target]
+        self.lpDone(target)
+
+    def lpDone(self, target):
+        if target in self.listeners:
+            self.listeners[target].finish()
+            del self.listeners[target]
 
     def privateChatReply(self, data, timestamp=None):
         tstxt = ""
@@ -235,14 +239,6 @@ class Channel(Resource):
 
         return "OK"
 
-
-class LoginFile(File):
-    def __init__(self, msg=""):
-        File.__init__(self, "login.html")
-   
-    def render_POST(self, req):
-        return self.render_GET(req)
-
 class DumpInfo(Resource):
     isLeaf = True
 
@@ -255,11 +251,27 @@ class DumpInfo(Resource):
     
         return ret
 
+class LongSession(Session):
+    sessionTimeout = 3600 * 8
+
 class tpchat(Resource):
     def __init__(self):
         Resource.__init__(self)
         self.channels = { }
         self.ircd = None
+
+    def getChannel(self, channame, key=None):
+        if channame not in self.channels:
+            self.channels[channame] = Channel(channame, key=key)
+
+        channel = self.channels[channame]
+
+        if key is not None: # user login/join attempt
+            if channel.key is not None:
+                if channel.key != key:
+                    return None
+
+        return channel
 
     def getChannelNameFromReq(self, req):
         hostparts = req.getHeader("host").split(".")
@@ -276,6 +288,7 @@ class tpchat(Resource):
         req.user = IUser(req.getSession())
 
         channame = self.getChannelNameFromReq(req)
+
 #        print req, req.args
 
         # static file should come before logged-in check
@@ -283,9 +296,9 @@ class tpchat(Resource):
             return staticFiles[path]
 
         if channame:
-            LoginPage = FileTemplate("login.html", channel=channame, channelattr='style=""')
+            LoginPage = lambda msg: FileTemplate("login.html", channel=channame, channelattr='style=""', msg=msg)
         else:
-            LoginPage = FileTemplate("login.html", channel="", channelattr="")
+            LoginPage = lambda msg: FileTemplate("login.html", channel="", channelattr="", msg=msg)
 
         # login must come before logged-in check
         if path == "login":
@@ -294,28 +307,36 @@ class tpchat(Resource):
 
                 if channel is None:
                     print "incorrect login: %s" % req.args
-                    return LoginPage # channel key incorrect
+                    return LoginPage("channel key incorrect")
             else:
                 channel = self.getChannel(channame, key="")
-            
-            if "nick" in req.args and isValidNick(req.args["nick"][0]):
-                n = req.args["nick"][0]
-                if n not in self.ircd.names: # if not already exists on irc
-                    req.user.nick = n
-                    req.user.channels.append(channel)
+           
+            if "nick" not in req.args:
+                return LoginPage("no nickname given")
 
-                    print time.ctime(), "*** %s joined %s" % (n, channel)
+            if not isValidNick(req.args["nick"][0]):
+                return LoginPage("invalid nickname")
 
-                    return Redirect("/")
+            n = req.args["nick"][0]
 
-            return LoginPage
+            if n in self.ircd.names:
+                return LoginPage("nick already exists on irc")
+
+            req.user.nick = n
+            req.user.channels.append(channel)
+            req.getSession().notifyOnExpire(lambda: self._expired(channame, n))
+
+            print time.ctime(), "*** %s joined %s" % (n, channel)
+
+            return Redirect("/")
+
 
         channel = self.getChannel(channame)
 
         # logged-in check
         if not req.user.nick:
             print "not logged in", req
-            return LoginPage
+            return LoginPage("")
 
         # these must come after logged-in check
         if path == "log":
@@ -325,7 +346,7 @@ class tpchat(Resource):
         if path == "logout":
             print "logout", req
             req.getSession().expire()
-            return LoginPage
+            return LoginPage("logged-out")
 
         if not path:
 #            print "no path", req
@@ -333,19 +354,10 @@ class tpchat(Resource):
 
         print "else", req
         return Resource.getChild(self, path, req)
-    
-    def getChannel(self, channame, key=None):
-        if channame not in self.channels:
-            self.channels[channame] = Channel(channame, key=key)
-
-        channel = self.channels[channame]
-
-        if key is not None: # user login/join attempt
-            if channel.key is not None:
-                if channel.key != key:
-                    return None
-
-        return channel
+   
+    def _expired(self, chan, nick):
+        print "*** %s idled out of #%s" % (nick, chan)
+        self.getChannel(chan).lpDone(nick)
 
 class tpircd(twisted.protocols.basic.LineReceiver):
     def __init__(self):
@@ -523,6 +535,7 @@ def main():
     root = tpchat()
 
     factory = Site(root)
+    factory.sessionFactory = LongSession
 
     connect_ircd()
 

@@ -1,6 +1,10 @@
 
+var reconnectTimeout = 250;
+var nRetries = 3;
+
 var send_text = "";
 var ready_to_send = true;
+
 
 function error(t, e)
 {
@@ -58,9 +62,6 @@ function send_accum_text()
               })
    }
 }
-
-var reconnectTimeout = 1000;
-var nRetries = 10;
 
 function wait_error(event, xhr, opts, err)
 {
