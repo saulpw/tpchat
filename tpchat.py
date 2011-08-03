@@ -117,9 +117,11 @@ class Channel(Resource):
         self.listeners = { }
 
     def _reqFinished(self, failure, req):
-        if failure:
-            print failure
-            return failure
+        target = req.user.nick
+        if target in self.listeners:
+            del self.listeners[target]
+
+         # XXX: how to avoid "Unhandled error in Deferred" messages?
 
     def render_GET(self, req):
         givent = -1
@@ -156,13 +158,13 @@ class Channel(Resource):
         # render calls .finish() automatically
    
     def lpReply(self, target, text):
-        self.listeners[target].write(self.privateChatReply(text))
-        self.lpDone(target)
+        if target in self.listeners:
+            self.listeners[target].write(self.privateChatReply(text))
+            self.listeners[target].finish()
 
     def lpDone(self, target):
         if target in self.listeners:
             self.listeners[target].finish()
-            del self.listeners[target]
 
     def privateChatReply(self, data, timestamp=None):
         tstxt = ""
@@ -252,7 +254,7 @@ class DumpInfo(Resource):
         return ret
 
 class LongSession(Session):
-    sessionTimeout = 3600 * 8
+    sessionTimeout = 3600 * 2
 
 class tpchat(Resource):
     def __init__(self):
