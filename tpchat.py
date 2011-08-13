@@ -278,10 +278,12 @@ class tpchat(Resource):
     def getChannelNameFromReq(self, req):
         hostparts = req.getHeader("host").split(".")
 
-        if len(hostparts) < 3:
-            channame = "errors"
-        else: 
+        if "channel" in req.args and len(req.args["channel"]) > 0:
+            channame = req.args["channel"][0]
+        elif len(hostparts) > 2:
             channame = hostparts[-3]
+        else:
+            channame = ""
 
         return channame
 
@@ -298,7 +300,7 @@ class tpchat(Resource):
             return staticFiles[path]
 
         if channame:
-            LoginPage = lambda msg: FileTemplate("login.html", channel=channame, channelattr='style=""', msg=msg)
+            LoginPage = lambda msg: FileTemplate("login.html", channel=channame, channelattr='hidden', msg=msg)
         else:
             LoginPage = lambda msg: FileTemplate("login.html", channel="", channelattr="", msg=msg)
 

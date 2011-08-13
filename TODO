@@ -22,6 +22,7 @@ bugs:
   - scroll to bottom when new text not added sometimes
   - SQUIT/disconnect from irc server unrecoverable
   - session cookie should last 12 hours
+  - channel input doesn't map correctly
 
 style:
   - top/left margins on login page

@@ -1,18 +1,32 @@
 
-var reconnectTimeout = 250;
-var nRetries = 3;
+var reconnectTimeout = 500;
+var nRetries = 6;
 
 var send_text = "";
 var ready_to_send = true;
 
+function warnColor(n)
+{
+    var color = "#FFFFFF";
+    switch (n) {
+    case 6: color = "#FFFFFF"; break;
+    case 5: color = "#FFDDDD"; break;
+    case 4: color = "#FFBBBB"; break;
+    case 3: color = "#FF9999"; break;
+    case 2: color = "#FF7777"; break;
+    case 1: color = "#FF4444"; break;
+    case 0: color = "#FF0000"; break;
+    }
+    $(".msgs").css("background-color", color);
+}
 
 function error(t, e)
 {
    $("#error #" + t).html(e)
 
+    warnColor(nRetries);
     if (nRetries > 0) {
         set_wait_timer(reconnectTimeout);
-        nRetries -= 1;
     } else {
         $(".msgs").addClass("disconnected");
     }
@@ -28,6 +42,7 @@ function say(e)
    }
    return false;
 }
+
 function send_accum_text()
 {
    if (send_text != "") {
@@ -66,8 +81,8 @@ function send_accum_text()
 function wait_error(event, xhr, opts, err)
 {
     msg = opts.url + ": " + xhr.statusText + " " + event;
+    nRetries -= 1;
     error("remote", msg);
-
 }
 
 function on_load()
@@ -161,9 +176,12 @@ function wait_for_chat(t)
         var t1 = parseInt($(x).attr("nextt"));
         if (!isFinite(t1)) {
             lastt = -1;
+            nRetries -= 1;
             error("remote", "invalid nextt");
             return;
         }
+        nRetries = 6;
+        warnColor(nRetries);
         wait_for_chat(t1);
 
         return true;

@@ -41,5 +41,15 @@ td {
 #error { height: 2em; display: none; }
 .disconnected #sendbar { display: none; } 
 .disconnected #error { display: block; }
-.disconnected #log { background-color: khaki; }
+/* .disconnected #log { background-color: khaki; } */
 
+
+#prompt {
+    width: 21em;
+}
+input, button {
+    margin-top: 3px;
+}
+#login {
+    width: 96%;
+}

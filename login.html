@@ -32,14 +32,15 @@
 </script>
 </head>
 <body>
-<span class="message" id="log">%(msg)s</span>
 <form id="f" name="loginform" action="/login" method="POST">
-<div id="prompt">[nickname]&nbsp;
-<input id="nick" name="nick" type="text" />
-<br/>[password]&nbsp;
-<input id="password" name="password" type="password" />
-<br/>[channel]&nbsp;&nbsp;
-<input id="channel" name="channel" type="text" %(channelattr)s value="%(channel)s"/>
+<div id="prompt">
+<span class="prompt">[nickname]&nbsp;<input id="nick" name="nick" type="text" /></span>
+<br/>
+<span class="prompt">[password]&nbsp;<input id="password" name="password" type="password" /></span>
+<br/>
+<span class="prompt %(channelattr)s">
+[channel]&nbsp;&nbsp;<input id="channel" name="channel" type="text" value="%(channel)s"/>
+</span>
 <!--br/>
 Logout automatically <select name="sessionlife">
 <option value="close">on window close</option>
@@ -49,6 +50,7 @@ Logout automatically <select name="sessionlife">
 <br/>
 <button id="login" name="login" type="submit">Login</button>
 </div>
+<span class="message" id="log">%(msg)s</span>
 </form>
 <div id="error">
 <div id="local"></div>
