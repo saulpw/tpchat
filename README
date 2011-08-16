@@ -1,0 +1,11 @@
+Tpchat is a kind of textpunk webchat with history and irc gateway.  Has a kind
+of shared diary chat feeling.
+
+Primary design goals:
+   * reliable
+   * pragmatic
+   * safe-for-work
+   * unicode-friendly
+
+The server uses the Twisted framework (Python), connects to another irc server, and becomes a long-polling webserver that routes messages.  The web client uses jQuery and tries to be as transparent as possible.
+

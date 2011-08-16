@@ -30,16 +30,20 @@ def divTimestamp(fileoffset):
         ahref += '</td>' 
         return divTimestampStart + ahref + '</tr></table>'
 
-fmtdivChatline = '''<table class="msg"><tr><td class="time" timet="%(time)s">%(hrmin)s</td> <td class="src"> %(src)s</td><td class="contents"> %(contents)s</td></tr></table>
+fmtdivChatline = '''<table class="msg %(classes)s"><tr><td class="time" timet="%(time)s">%(hrmin)s</td> <td class="src"> %(src)s</td><td class="contents"> %(contents)s</td></tr></table>
 ''' # spaces included for reasonable cutnpaste, newline for chatlog
 
 def divChatline(**extra):
-    if "time" not in extra:
-        extra["time"] = getClockString()
+    d = { 
+      "time": getClockString(),
+      "classes": "",
+    }
 
-    extra["hrmin"] = time.strftime("%H:%M", time.localtime(int(extra["time"])))
+    d.update(extra)
 
-    return fmtdivChatline % extra
+    d["hrmin"] = time.strftime("%H:%M", time.localtime(int(d["time"])))
+
+    return fmtdivChatline % d
 
 regexUrl = re.compile(r"(http://\S+)", re.IGNORECASE | re.LOCALE)
 
@@ -178,16 +182,17 @@ class Channel(Resource):
     def cmd_MSG(self, src, rest):
         target, msg = rest.split(" ", 1)
         if target in self.listeners:
-            self.lpReply(target, "*%s* %s" % (src, msg))
-            return "-> *%s* %s" % (target, msg)
+            self.lpReply(target, divChatline(src="*%s*" % src, contents=msg, classes="private"))
         elif target in root.ircd.uids:
             root.ircd.PRIVMSG(target, src, msg)
-            return "-> *%s* %s" % (target, msg)
         else:
-            return "*** %s is not logged in (%s)" % (" ".join(self.listeners.keys()), target)
+            reply = "%s is not logged in (%s)" % (" ".join(self.listeners.keys()), target)
+            return divChatline(src="***", contents=reply, classes="private")
+
+        return divChatline(contents=msg, src="&#x2794;%s" % target, classes="private")
 
     def cmd_HELP(self, src, rest):
-        return "No help available."
+        return "Don't panic"
 
     def render_POST(self, req):
         if not req.user.nick:

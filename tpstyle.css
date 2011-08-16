@@ -53,3 +53,7 @@ input, button {
 #login {
     width: 96%;
 }
+
+.private {
+    font-style: oblique;
+}
