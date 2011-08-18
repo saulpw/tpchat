@@ -180,6 +180,7 @@ function wait_for_chat(t)
         var t1 = parseInt($(x).attr("nextt"));
         if (!isFinite(t1)) {
             lastt = -1;
+            nRetries += 1;
             error("remote", "invalid nextt");
             return;
         }
