@@ -1,6 +1,7 @@
 
-var reconnectTimeout = 500;
-var nRetries = 6;
+var reconnectTimeout = 250;
+var nRetries = 0;
+var maxRetries = 6;
 
 var send_text = "";
 var ready_to_send = true;
@@ -9,13 +10,19 @@ function warnColor(n)
 {
     var color = "#FFFFFF";
     switch (n) {
-    case 6: color = "#FFFFFF"; break;
-    case 5: color = "#FFDDDD"; break;
-    case 4: color = "#FFBBBB"; break;
-    case 3: color = "#FF9999"; break;
-    case 2: color = "#FF7777"; break;
-    case 1: color = "#FF4444"; break;
-    case 0: color = "#FF0000"; break;
+    case -6: color = "#0000FF"; break;
+    case -5: color = "#4444FF"; break;
+    case -4: color = "#7777FF"; break;
+    case -3: color = "#9999FF"; break;
+    case -2: color = "#BBBBFF"; break;
+    case -1: color = "#DDDDFF"; break;
+    case 0: color = "#FFFFFF"; break;
+    case 1: color = "#DDFFDD"; break;
+    case 2: color = "#BBFFBB"; break;
+    case 3: color = "#99FF99"; break;
+    case 4: color = "#77FF77"; break;
+    case 5: color = "#44FF44"; break;
+    default: color = "#00FF00"; break;
     }
     $(".msgs").css("background-color", color);
 }
@@ -25,7 +32,8 @@ function error(t, e)
    $("#error #" + t).html(e)
 
     warnColor(nRetries);
-    if (nRetries > 0) {
+
+    if (nRetries < maxRetries) {
         set_wait_timer(reconnectTimeout);
     } else {
         $(".msgs").addClass("disconnected");
@@ -68,6 +76,7 @@ function send_accum_text()
                   sendtimer = setInterval('send_accum_text()', 200);
                 },
                 error: function (xhr, status, err) {
+                    nRetries += 1;
                     error("remote", status);
                     clearInterval(sendtimer);
                     ready_to_send = true;
@@ -78,19 +87,11 @@ function send_accum_text()
    }
 }
 
-function wait_error(event, xhr, opts, err)
-{
-    msg = opts.url + ": " + xhr.statusText + " " + event;
-    nRetries -= 1;
-    error("remote", msg);
-}
 
 function on_load()
 {
     $("#chatline").focus();
     $("#f").submit(say);
-
-    $(document).ajaxError(wait_error);
 
     set_wait_timer(1); // first time do it right away
     sendtimer = setInterval('send_accum_text()', 200)
@@ -139,7 +140,7 @@ function post_new_chat(x, replace)
     $(".stardate", newchat).each(function (i, v) {
         var timet = $(v).attr("timet");
         var d = new Date(timet * 1000);
-        var t = getDateString(d); // + " &#x2B06;";
+        var t = getDateString(d);
         $(v).html(t);
     });
 
@@ -160,8 +161,11 @@ function post_new_chat(x, replace)
 function get_backlog(ttt)
 {
     $.get("/log?t=-" + ttt).success(function(x) {
-          post_new_chat(x, true);
-          return true;
+        post_new_chat(x, true);
+        return true;
+    }).error(function (x) {
+        nRetries -= 1;
+        warnColor(nRetries);
     });
 }
 
@@ -176,15 +180,16 @@ function wait_for_chat(t)
         var t1 = parseInt($(x).attr("nextt"));
         if (!isFinite(t1)) {
             lastt = -1;
-            nRetries -= 1;
             error("remote", "invalid nextt");
             return;
         }
-        nRetries = 6;
+        nRetries = 0;
         warnColor(nRetries);
         wait_for_chat(t1);
 
         return true;
+    }).error(function (event, xhr, opts, err) {
+        set_wait_timer(reconnectTimeout);
     });
 }
 
