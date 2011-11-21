@@ -1,4 +1,26 @@
+base: ubuntu 10.04 LTS (Lucid)
 
-apt-get install:
-    python-twisted
-    python-twisted-web2  ?
+apt-get install
+   screen
+   psmisc
+   git-arch
+   ircd-irc2
+   python-twisted
+
+1) get source
+    git clone git://github.com/saulpw/tpchat.git
+
+2) setup ircd
+    /etc/ircd/ircd.conf:
+        - C:127.0.0.1:<ircd_passwd>:tpchat.localhost:6669:1
+        - N:127.0.0.1:<ircd_servername>:tpchat.localhost:1:1
+        - I: line for machines who want to access irc directly
+    # killall -HUP ircd
+
+3) configure tpconfig.py
+    ircd_passwd = "<ircd_passwd>"
+    ircd_servername = "<internet hostname of server>"
+
+4) [optional] create ssl.key and ssl.crt
+
+5) run tpchat.py

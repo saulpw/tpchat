@@ -200,9 +200,16 @@ class Channel(Resource):
             return "not logged in"
 
         text = req.args["chatline"][0]
+        if text == "/serror":
+            req.setResponseCode(500)
+            return "serror"
+
         if text[0] == '/':
-            cmd, rest = text.split(" ", 1)
-            cmd = cmd.upper()
+            cmdrest = text.split(" ", 1)
+            cmd = cmdrest[0].upper()
+            rest = ""
+            if len(cmdrest) > 1:
+                rest = cmdrest[1]
 
             handler = "cmd_" + cmd[1:]
             if handler in Channel.__dict__:

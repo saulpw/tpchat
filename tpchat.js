@@ -3,8 +3,10 @@ var reconnectTimeout = 250;
 var nRetries = 0;
 var maxRetries = 6;
 
-var send_text = "";
-var ready_to_send = true;
+var text_sending = "";
+var text_to_send = "";
+
+var sendtimer = null;
 
 function warnColor(n)
 {
@@ -45,46 +47,52 @@ function say(e)
    e.preventDefault();
    var v = $("#chatline").val();
    if (v != "") {
-      send_text += v + "\n";
+      text_to_send += v + "\n";
       $("#chatline").val('');
    }
+  
+   clearTimeout(sendtimer);
+   sendtimer = setTimeout('send_accum_text()', 50);
    return false;
 }
 
 function send_accum_text()
 {
-   if (send_text != "") {
-       if (!ready_to_send) {
-          error("local", "not ready to send '" + send_text + "'!  ");
-          return;
-       }
-       ready_to_send = false;
-       $.ajax({ type: 'POST',
-                url: '/log',
-                data: { chatline: send_text },
-                success: function (data, stat, xhr) {
-                  send_text = "";
-                },
-                complete: function (xhr, stat) { 
-                  if (send_text != "") {
-                     $("#chatline").val(send_text + "\n" + $("#chatline").val());
-                     send_text = "";
-                  } 
+    if (text_sending != "") {
+        error("local", "not ready to send '" + text_to_send + "'!  ");
+        return;
+    }
 
-                  clearInterval(sendtimer);
-                  ready_to_send = true; 
-                  sendtimer = setInterval('send_accum_text()', 200);
-                },
-                error: function (xhr, status, err) {
-                    nRetries += 1;
-                    error("remote", status);
-                    clearInterval(sendtimer);
-                    ready_to_send = true;
+    if (text_to_send == "") {
+        return;
+    }
 
-                    sendtimer = setInterval('send_accum_text()', 1000);
-                }
-              })
-   }
+    if (text_to_send == "/cerror\n") {
+      lolwhat[0] = 1;
+      return;
+    }
+
+   text_sending += text_to_send;
+   text_to_send = "";
+
+   $.ajax({ type: 'POST',
+            url: '/log',
+            data: { chatline: text_sending },
+            success: function (data, stat, xhr) {
+              text_sending = "";
+            },
+            complete: function (xhr, stat) { 
+              if (text_sending != "") {  // not successful
+                 text_to_send = text_sending + text_to_send;  // send next time
+                 text_sending = "";
+              }
+
+              if (text_to_send != "") {
+                 clearTimeout(sendtimer);
+                 sendtimer = setTimeout('send_accum_text()', 50);
+              }
+            }
+          })
 }
 
 
@@ -94,7 +102,6 @@ function on_load()
     $("#f").submit(say);
 
     set_wait_timer(1); // first time do it right away
-    sendtimer = setInterval('send_accum_text()', 200)
 
     var nickname = $("#b").text();
     setCookie("nickname", nickname, 365*24);
@@ -178,9 +185,9 @@ function wait_for_chat(t)
     $.get(lasturl).success(function(x) {
         post_new_chat(x, false);
         var t1 = parseInt($(x).attr("nextt"));
-        if (!isFinite(t1)) {
+        if (!isFinite(t1)) { // logged out
             lastt = -1;
-            nRetries += 1;
+            nRetries = maxRetries;
             error("remote", "invalid nextt");
             return;
         }
