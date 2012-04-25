@@ -289,7 +289,6 @@ class tpchat(Resource):
 
     def getChannelNameFromReq(self, req):
         channame = ""
-        hostparts = .split(".")
 
         if "channel" in req.args and len(req.args["channel"]) > 0:
             channame = req.args["channel"][0]
@@ -298,7 +297,7 @@ class tpchat(Resource):
             if host:
                 hostparts = host.split(".")
                 if len(hostparts) > 2:
-                    channame = ".".join(hostparts[0:-3]) # ignore ".emups.com"
+                    channame = ".".join(hostparts[0:-2]) # ignore ".emups.com"
 
         return channame
 
@@ -394,7 +393,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
         return ret
 
     def connectionLost(self, reason):
-        print "ircd connection lost: %s" % reason)
+        print "ircd connection lost: %s" % reason
         connect_ircd()
 
     def lineReceived(self, line):
