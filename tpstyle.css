@@ -43,9 +43,14 @@ td {
 .disconnected #error { display: block; }
 /* .disconnected #log { background-color: khaki; } */
 
-
+/* login screen */
 #prompt {
-    width: 21em;
+    width: 24em;
+}
+
+.prompt {
+    height: 1em; 
+    font-size: 120%; 
 }
 input, button {
     margin-top: 3px;
