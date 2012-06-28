@@ -6,6 +6,9 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta http-equiv="Cache-control" content="no-cache"/>
+<meta name="viewport"
+  content="width=device-width,
+  minimum-scale=1.0, maximum-scale=1.0" />
 <title>Login</title>
 <link type="text/css" rel="stylesheet" href="style.css">
 <link type="text/css" rel="stylesheet" href="tpstyle.css">
@@ -34,13 +37,13 @@
 <body>
 <form id="f" name="loginform" action="/login" method="POST">
 <div id="prompt">
-<span class="prompt">[nickname]&nbsp;<input id="nick" name="nick" type="text" /></span>
+<div class="prompt">[nickname]&nbsp;<input id="nick" name="nick" type="text" /></div>
 <br/>
-<span class="prompt">[password]&nbsp;<input id="password" name="password" type="password" /></span>
+<div class="prompt">[password]&nbsp;<input id="password" name="password" type="password" /></div>
 <br/>
-<span class="prompt %(channelattr)s">
+<div class="prompt %(channelattr)s">
 [channel]&nbsp;&nbsp;<input id="channel" name="channel" type="text" value="%(channel)s"/>
-</span>
+</div>
 <!--br/>
 Logout automatically <select name="sessionlife">
 <option value="close">on window close</option>
