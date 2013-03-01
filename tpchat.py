@@ -297,7 +297,7 @@ class tpchat(Resource):
             if host:
                 hostparts = host.split(".")
                 if len(hostparts) > 2:
-                    channame = ".".hostparts[-3] # "X.emups.com"
+                    channame = hostparts[-3] # "X.emups.com"
 
         return channame
 
