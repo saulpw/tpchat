@@ -492,7 +492,7 @@ class tpircd(twisted.protocols.basic.LineReceiver):
         return False
 
     def on_MODE(self, src, rest):
-        target, modes = rest.split(" ", 3)
+        target, modes = rest.split(" ", 1)
         if " " in modes:
             modes, args = modes.split(" ")
 

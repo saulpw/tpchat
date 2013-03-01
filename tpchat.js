@@ -27,7 +27,7 @@ function warnColor(n)
     case 3: color = "#99FF99"; break;
     case 4: color = "#77FF77"; break;
     case 5: color = "#44FF44"; break;
-    default: color = "#00FF00"; break;
+    default: color = "#C7DE6A"; break;
     }
     $(".msgs").css("background-color", color);
 }
