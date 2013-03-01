@@ -1,4 +1,7 @@
 
+var title_string = "emups";
+var new_msg_title_string = "⚞" + title_string + "⚟";
+
 var reconnectTimeout = 250;
 var nRetries = 0;
 var maxRetries = 6;
@@ -67,11 +70,6 @@ function send_accum_text()
         return;
     }
 
-    if (text_to_send == "/cerror\n") {
-      lolwhat[0] = 1;
-      return;
-    }
-
    text_sending += text_to_send;
    text_to_send = "";
 
@@ -98,6 +96,13 @@ function send_accum_text()
 
 function on_load()
 {
+    $(window).isFocused = true;
+    $(window).focus(function () {
+            this.isFocused = true;
+            document.title = title_string;
+    });
+    $(window).blur(function () { this.isFocused = false; });
+
     $("#chatline").focus();
     $("#f").submit(say);
 
@@ -162,6 +167,10 @@ function post_new_chat(x, replace)
         // for IE (does this assume 12px font height?)
         var h1 = $("#log").scrollTop();
         $("#log").scrollTop(h1*12);
+    }
+
+    if (! window.isFocused) {
+        document.title = new_msg_title_string;
     }
 }
 
