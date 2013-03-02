@@ -1,6 +1,6 @@
 
 var title_string = "emups";
-var new_msg_title_string = "⚞" + title_string + "⚟";
+var new_msg_title_string = "☛" + title_string;
 
 var reconnectTimeout = 250;
 var nRetries = 0;
@@ -96,12 +96,15 @@ function send_accum_text()
 
 function on_load()
 {
-    $(window).isFocused = true;
-    $(window).focus(function () {
-            this.isFocused = true;
+    var w = $("body")
+    w.isFocused = true;
+    w.focusin(function () {
+            window.isFocused = true;
             document.title = title_string;
     });
-    $(window).blur(function () { this.isFocused = false; });
+    w.focusout(function () {
+            window.isFocused = false;
+    });
 
     $("#chatline").focus();
     $("#f").submit(say);
