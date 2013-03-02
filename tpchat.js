@@ -1,10 +1,11 @@
 
 var title_string = "emups";
-var new_msg_title_string = "☛" + title_string;
 
 var reconnectTimeout = 250;
 var nRetries = 0;
 var maxRetries = 6;
+
+var num_new_messages = 0;
 
 var text_sending = "";
 var text_to_send = "";
@@ -100,7 +101,8 @@ function on_load()
     w.isFocused = true;
     w.focusin(function () {
             window.isFocused = true;
-            document.title = title_string;
+            num_new_messages = 0;
+            set_title();
     });
     w.focusout(function () {
             window.isFocused = false;
@@ -173,8 +175,21 @@ function post_new_chat(x, replace)
     }
 
     if (! window.isFocused) {
-        document.title = new_msg_title_string;
+        num_new_messages += 1;
+        set_title();
     }
+}
+
+var new_msg_chars = [ 0x2800, 0x2802, 0x2806, 0x2807, 0x2847, 0x28bc, 0x28be, 0x28bf, 0x28ff ];
+
+function set_title() {
+    var prefix = "";
+    if (num_new_messages > new_msg_chars.length) {
+        prefix = "(" + num_new_messages + ") ";
+    } else if (num_new_messages > 0) {
+        prefix = String.fromCharCode(new_msg_chars[num_new_messages]);
+    }
+    document.title = prefix + title_string;
 }
 
 function get_backlog(ttt)
