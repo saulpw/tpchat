@@ -1,4 +1,3 @@
-
 var title_string = "emups";
 
 var reconnectTimeout = 250;
@@ -11,6 +10,10 @@ var text_sending = "";
 var text_to_send = "";
 
 var sendtimer = null;
+
+function replaceMacros(s) {
+    return s;
+}
 
 function warnColor(n)
 {
@@ -51,12 +54,15 @@ function say(e)
    e.preventDefault();
    var v = $("#chatline").val();
    if (v != "") {
-      text_to_send += v + "\n";
+      text_to_send += replaceMacros(v) + "\n";
       $("#chatline").val('');
    }
   
    clearTimeout(sendtimer);
    sendtimer = setTimeout('send_accum_text()', 50);
+
+   setTimeout(function() { $("#chatline").focus(); }, 10);
+
    return false;
 }
 
@@ -180,14 +186,10 @@ function post_new_chat(x, replace)
     }
 }
 
-var new_msg_chars = [ 0x2800, 0x2802, 0x2806, 0x2807, 0x2847, 0x28bc, 0x28be, 0x28bf, 0x28ff ];
-
 function set_title() {
     var prefix = "";
-    if (num_new_messages > new_msg_chars.length) {
+    if (num_new_messages > 0) {
         prefix = "(" + num_new_messages + ") ";
-    } else if (num_new_messages > 0) {
-        prefix = String.fromCharCode(new_msg_chars[num_new_messages]);
     }
     document.title = prefix + title_string;
 }
