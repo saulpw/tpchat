@@ -295,9 +295,7 @@ class tpchat(Resource):
         else:
             host = req.getHeader("host")
             if host:
-                hostparts = host.split(".")
-                if len(hostparts) > 2:
-                    channame = hostparts[-3] # "X.emups.com"
+                channame = host.rstrip(tpconfig.tpchat_domain)
 
         return channame
 

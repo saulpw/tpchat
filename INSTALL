@@ -1,26 +1,66 @@
-base: ubuntu 10.04 LTS (Lucid)
 
-apt-get install
-   screen
-   psmisc
-   git-arch
-   ircd-irc2
-   python-twisted
+# How to install tpchatd 
 
-1) get source
-    git clone git://github.com/saulpw/tpchat.git
+1a. Install instance
 
-2) setup ircd
-    /etc/ircd/ircd.conf:
-        - C:127.0.0.1:<ircd_passwd>:tpchat.localhost:6669:1
-        - N:127.0.0.1:<ircd_servername>:tpchat.localhost:1:1
-        - I: line for machines who want to access irc directly
-    # killall -HUP ircd
+    - base: Ubuntu 14.04 LTS amd64
 
-3) configure tpconfig.py
-    ircd_passwd = "<ircd_passwd>"
-    ircd_servername = "<internet hostname of server>"
+        # apt-get update && apt-get upgrade
+        # apt-get install git ircd-irc2 python-twisted
 
-4) [optional] create ssl.key and ssl.crt
+1b. Set DNS 'A' record for '*.chat' to instance IP
 
-5) run tpchat.py
+1c. Download source
+
+        $ git clone git://github.com/saulpw/tpchat.git
+
+2a. Configure `/etc/ircd/ircd.conf`
+
+        A:saul.pw:Saul Pwanson <chat@saul.pw>:::chatsaulpw:
+        C:127.0.0.1:passwd:irc.chat.saul.pw:6669:127.0.0.1:
+        N:127.0.0.1:passwd:irc.chat.saul.pw::1:
+        P:127.0.0.1:::6669::
+        I:*@127.0.0.1::::1::
+
+2b. Restart ircd
+
+        # service ircd-irc2 restart
+
+2c. Make sure 'telnet blah.chat.saul.pw 6669' does not connect from outside the instance.
+
+3a. Configure `tpchat/tpconfig.py`
+
+        ircd_passwd = "passwd"
+        ircd_servername = "irc.chat.saul.pw"
+
+        real_ircd_server = "localhost"
+        real_ircd_port = 6669
+        ircd_sid = "100C"
+
+        tpchat_port = 80
+        htdocs_path = "/home/saul/tpchat"
+        log_path = "/home/saul/tplogs"
+
+3b. Add `/etc/init/tpchat.conf'
+
+        description "minimalist irc-web gateway"
+        author "Saul Pwanson"
+
+        start on runlevel [2345]
+
+        script
+
+            cd /home/saul/tpchat
+            echo "[`date`] Starting server" >> /var/log/tpchat.log
+            exec >> /var/log/tpchat.log 2>&1
+            exec ./tpchat.py
+
+        end script
+
+3c. [optional] create ssl.key and ssl.crt in tpchat working directory
+
+3d. Start tpchat service
+
+        # mkdir /home/saul/tplogs
+        # service tpchat start
+
