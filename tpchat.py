@@ -343,6 +343,11 @@ class tpchat(Resource):
             req.user.nick = n
             req.user.channels.append(channel)
             req.getSession().notifyOnExpire(lambda: self._expired(channame, n))
+            try:
+                req.getSession().sessionTimeout = { "never": None, "day": 3600*12, "close": 0 }[req.args["sessionlife"]]
+                print "set session life to ", req.getSession().sessionTimeout 
+            except:
+                pass
 
             print time.ctime(), "*** %s joined %s" % (n, channel)
 
@@ -443,8 +448,9 @@ class tpircd(twisted.protocols.basic.LineReceiver):
 
     def PRIVMSG(self, dest, src, msg):
         msg = str(msg)
-        for i in xrange(0, len(msg), 450):
-            self.send(":%s PRIVMSG %s :%s" % (self.getuid(src), dest, msg[i:i+450]))
+        for line in str(msg).split('\n'):
+            for i in xrange(0, len(msg), 400):
+                self.send(":%s PRIVMSG %s :%s" % (self.getuid(src), dest, msg[i:i+400]))
 
     def join(self, cname):
         self.send(":%s NJOIN %s :%s" % (self.sid, '#' + cname, self.loguid))
@@ -466,8 +472,9 @@ class tpircd(twisted.protocols.basic.LineReceiver):
             self.uids[name] = uid
             self.names[uid] = name
 
+            trimmedname = "".join(name.split())
             self.send(":%s UNICK %s %s %s localhost 127.0.0.1 +i :%s" % (
-                       self.sid, name, uid, name, name))
+                       self.sid, trimmedname, uid, trimmedname, name))
         else:
             uid = self.uids[name]
 
