@@ -295,7 +295,9 @@ class tpchat(Resource):
         else:
             host = req.getHeader("host")
             if host:
-                channame = host.rstrip(tpconfig.tpchat_domain)
+                if ":" in host:
+                    host = host.split(":")[0]
+                channame = host.replace("." + tpconfig.tpchat_domain, '')
 
         return channame
 
@@ -447,8 +449,8 @@ class tpircd(twisted.protocols.basic.LineReceiver):
     def PRIVMSG(self, dest, src, msg):
         msg = str(msg)
         for line in str(msg).split('\n'):
-            for i in xrange(0, len(msg), 400):
-                self.send(":%s PRIVMSG %s :%s" % (self.getuid(src), dest, msg[i:i+400]))
+            for i in xrange(0, len(line), 400):
+                self.send(":%s PRIVMSG %s :%s" % (self.getuid(src), dest, line[i:i+400]))
 
     def join(self, cname):
         self.send(":%s NJOIN %s :%s" % (self.sid, '#' + cname, self.loguid))
