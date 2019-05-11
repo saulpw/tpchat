@@ -45,7 +45,7 @@ def divChatline(**extra):
 
     return fmtdivChatline % d
 
-regexUrl = re.compile(r"(http://\S+)", re.IGNORECASE | re.LOCALE)
+regexUrl = re.compile(r"(https?://\S+)", re.IGNORECASE | re.LOCALE)
 
 def getClockString():
     return int(time.time())
@@ -297,7 +297,10 @@ class tpchat(Resource):
             if host:
                 if ":" in host:
                     host = host.split(":")[0]
-                channame = host.replace("." + tpconfig.tpchat_domain, '')
+             
+                channame = host
+                for domain in tpconfig.tpchat_domain:
+                    channame = channame.replace("." + domain, '')
 
         return channame
 
